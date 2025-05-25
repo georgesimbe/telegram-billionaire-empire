@@ -1,0 +1,197 @@
+;; Reward Pool Smart Contract
+;; Handles daily rewards, tournament prizes, and special events
+
+#include "stdlib.fc";
+
+;; Storage structure
+;; admin_address:MsgAddress
+;; daily_reward_amount:Coins
+;; tournament_pool:Coins
+;; last_tournament_end:uint32
+;; tournament_duration:uint32
+;; claimed_rewards:dict(256->uint32)  ;; player_id -> last_claim_timestamp
+
+const int op::claim_daily = 0x2001;
+const int op::distribute_tournament = 0x2002;
+const int op::add_to_pool = 0x2003;
+const int op::update_rewards = 0x2004;
+
+const int error::already_claimed = 201;
+const int error::tournament_active = 202;
+const int error::insufficient_pool = 203;
+const int error::unauthorized = 204;
+
+const int SECONDS_IN_DAY = 86400;
+
+;; Load contract data
+(slice, int, int, int, int, cell) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_msg_addr(),        ;; admin_address
+        ds~load_coins(),           ;; daily_reward_amount
+        ds~load_coins(),           ;; tournament_pool
+        ds~load_uint(32),          ;; last_tournament_end
+        ds~load_uint(32),          ;; tournament_duration
+        ds~load_dict()             ;; claimed_rewards
+    );
+}
+
+;; Save contract data
+() save_data(slice admin, int daily_amount, int tournament_pool, 
+             int last_tournament, int duration, cell claims) impure inline {
+    set_data(begin_cell()
+        .store_slice(admin)
+        .store_coins(daily_amount)
+        .store_coins(tournament_pool)
+        .store_uint(last_tournament, 32)
+        .store_uint(duration, 32)
+        .store_dict(claims)
+        .end_cell()
+    );
+}
+
+;; Check if player can claim daily reward
+(int) can_claim_daily(cell claims_dict, int player_id) inline {
+    (slice claim_data, int found) = claims_dict.udict_get?(256, player_id);
+    if (~ found) {
+        return -1; ;; Never claimed before
+    }
+    
+    int last_claim = claim_data~load_uint(32);
+    int current_time = now();
+    
+    return (current_time - last_claim) >= SECONDS_IN_DAY;
+}
+
+;; Main message handler
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) {
+        return ();
+    }
+
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    
+    if (flags & 1) {
+        return ();
+    }
+    
+    slice sender_address = cs~load_msg_addr();
+    
+    int op = in_msg_body~load_uint(32);
+    int query_id = in_msg_body~load_uint(64);
+
+    (slice admin, int daily_amount, int tournament_pool, 
+     int last_tournament, int duration, cell claims) = load_data();
+
+    if (op == op::claim_daily) {
+        int player_id = in_msg_body~load_uint(256);
+        slice player_address = in_msg_body~load_msg_addr();
+        
+        ;; Verify player can claim
+        int can_claim = can_claim_daily(claims, player_id);
+        throw_unless(error::already_claimed, can_claim);
+        
+        ;; Send daily reward
+        send_raw_message(begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(player_address)
+            .store_coins(daily_amount)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_uint(0, 32)
+            .store_slice("Daily reward!")
+            .end_cell(), 1);
+            
+        ;; Update claims
+        claims~udict_set(256, player_id, begin_cell()
+            .store_uint(now(), 32)
+            .end_cell().begin_parse());
+            
+        save_data(admin, daily_amount, tournament_pool, 
+                  last_tournament, duration, claims);
+    }
+    
+    elseif (op == op::distribute_tournament) {
+        throw_unless(error::unauthorized, equal_slices(sender_address, admin));
+        
+        int current_time = now();
+        throw_if(error::tournament_active, 
+                 current_time < (last_tournament + duration));
+        
+        ;; Parse winner addresses and amounts
+        int winner_count = in_msg_body~load_uint(8);
+        int total_distributed = 0;
+        
+        repeat(winner_count) {
+            slice winner_address = in_msg_body~load_msg_addr();
+            int prize_amount = in_msg_body~load_coins();
+            
+            throw_if(error::insufficient_pool, 
+                     total_distributed + prize_amount > tournament_pool);
+            
+            send_raw_message(begin_cell()
+                .store_uint(0x18, 6)
+                .store_slice(winner_address)
+                .store_coins(prize_amount)
+                .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+                .store_uint(0, 32)
+                .store_slice("Tournament prize!")
+                .end_cell(), 1);
+                
+            total_distributed += prize_amount;
+        }
+        
+        ;; Update state
+        tournament_pool -= total_distributed;
+        last_tournament = current_time;
+        
+        save_data(admin, daily_amount, tournament_pool, 
+                  last_tournament, duration, claims);
+    }
+    
+    elseif (op == op::add_to_pool) {
+        ;; Anyone can add to the tournament pool
+        tournament_pool += msg_value;
+        
+        save_data(admin, daily_amount, tournament_pool, 
+                  last_tournament, duration, claims);
+    }
+    
+    elseif (op == op::update_rewards) {
+        throw_unless(error::unauthorized, equal_slices(sender_address, admin));
+        
+        int new_daily_amount = in_msg_body~load_coins();
+        int new_duration = in_msg_body~load_uint(32);
+        
+        save_data(admin, new_daily_amount, tournament_pool, 
+                  last_tournament, new_duration, claims);
+    }
+}
+
+;; Get methods
+(int) get_daily_reward_amount() method_id {
+    (_, int amount, _, _, _, _) = load_data();
+    return amount;
+}
+
+(int) get_tournament_pool() method_id {
+    (_, _, int pool, _, _, _) = load_data();
+    return pool;
+}
+
+(int) get_tournament_ends_in() method_id {
+    (_, _, _, int last_end, int duration, _) = load_data();
+    int next_end = last_end + duration;
+    int current = now();
+    
+    if (current >= next_end) {
+        return 0; ;; Tournament ended
+    }
+    
+    return next_end - current;
+}
+
+(int) can_claim_daily_reward(int player_id) method_id {
+    (_, _, _, _, _, cell claims) = load_data();
+    return can_claim_daily(claims, player_id);
+}

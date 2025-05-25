@@ -1,0 +1,172 @@
+;; Billionaire Empire Game Wallet Smart Contract
+;; Handles point conversions, rewards, and withdrawals
+
+#include "stdlib.fc";
+
+;; Storage structure
+;; admin_address:MsgAddress 
+;; total_points:uint64
+;; total_withdrawn:Coins
+;; withdrawal_fee:uint32 (in basis points, e.g., 500 = 5%)
+;; min_withdrawal:uint64
+;; points_to_ton_rate:uint32
+;; emergency_pause:uint1
+
+const int op::withdraw = 0x1001;
+const int op::update_config = 0x1002;
+const int op::emergency_pause = 0x1003;
+const int op::verify_player = 0x1004;
+
+const int error::insufficient_points = 101;
+const int error::below_minimum = 102;
+const int error::paused = 103;
+const int error::unauthorized = 104;
+const int error::invalid_signature = 105;
+
+;; Load contract data
+(slice, int, int, int, int, int, int) load_data() inline {
+    slice ds = get_data().begin_parse();
+    return (
+        ds~load_msg_addr(),     ;; admin_address
+        ds~load_uint(64),       ;; total_points
+        ds~load_coins(),        ;; total_withdrawn
+        ds~load_uint(32),       ;; withdrawal_fee
+        ds~load_uint(64),       ;; min_withdrawal
+        ds~load_uint(32),       ;; points_to_ton_rate
+        ds~load_uint(1)         ;; emergency_pause
+    );
+}
+
+;; Save contract data
+() save_data(slice admin_address, int total_points, int total_withdrawn, 
+             int withdrawal_fee, int min_withdrawal, int points_to_ton_rate, 
+             int emergency_pause) impure inline {
+    set_data(begin_cell()
+        .store_slice(admin_address)
+        .store_uint(total_points, 64)
+        .store_coins(total_withdrawn)
+        .store_uint(withdrawal_fee, 32)
+        .store_uint(min_withdrawal, 64)
+        .store_uint(points_to_ton_rate, 32)
+        .store_uint(emergency_pause, 1)
+        .end_cell()
+    );
+}
+
+;; Calculate withdrawal amount after fee
+(int) calculate_withdrawal(int points, int rate, int fee_bp) inline {
+    int gross_amount = points * 1000000000 / rate; ;; Convert to nanotons
+    int fee = gross_amount * fee_bp / 10000;
+    return gross_amount - fee;
+}
+
+;; Main message handler
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+        return ();
+    }
+
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+    
+    if (flags & 1) { ;; ignore all bounced messages
+        return ();
+    }
+    
+    slice sender_address = cs~load_msg_addr();
+    
+    int op = in_msg_body~load_uint(32);
+    int query_id = in_msg_body~load_uint(64);
+
+    (slice admin_address, int total_points, int total_withdrawn, 
+     int withdrawal_fee, int min_withdrawal, int points_to_ton_rate, 
+     int emergency_pause) = load_data();
+
+    ;; Handle operations
+    if (op == op::withdraw) {
+        throw_if(error::paused, emergency_pause);
+        
+        int player_id = in_msg_body~load_uint(256);    ;; Player telegram ID (hashed)
+        int points_to_withdraw = in_msg_body~load_uint(64);
+        slice signature = in_msg_body~load_ref().begin_parse();
+        
+        ;; Verify signature (simplified - in production use proper crypto)
+        ;; This should verify that the backend signed this withdrawal request
+        cell withdrawal_data = begin_cell()
+            .store_uint(player_id, 256)
+            .store_uint(points_to_withdraw, 64)
+            .store_slice(sender_address)
+            .end_cell();
+            
+        int hash = cell_hash(withdrawal_data);
+        ;; TODO: Proper signature verification
+        
+        throw_if(error::below_minimum, points_to_withdraw < min_withdrawal);
+        throw_if(error::insufficient_points, points_to_withdraw > total_points);
+        
+        int withdrawal_amount = calculate_withdrawal(points_to_withdraw, points_to_ton_rate, withdrawal_fee);
+        
+        ;; Send TON to player
+        send_raw_message(begin_cell()
+            .store_uint(0x18, 6)
+            .store_slice(sender_address)
+            .store_coins(withdrawal_amount)
+            .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1)
+            .store_uint(0, 32) ;; Simple transfer
+            .store_slice("Points withdrawal")
+            .end_cell(), 1);
+            
+        ;; Update state
+        total_points -= points_to_withdraw;
+        total_withdrawn += withdrawal_amount;
+        
+        save_data(admin_address, total_points, total_withdrawn, 
+                  withdrawal_fee, min_withdrawal, points_to_ton_rate, emergency_pause);
+    }
+    
+    elseif (op == op::update_config) {
+        throw_unless(error::unauthorized, equal_slices(sender_address, admin_address));
+        
+        int new_fee = in_msg_body~load_uint(32);
+        int new_min_withdrawal = in_msg_body~load_uint(64);
+        int new_rate = in_msg_body~load_uint(32);
+        
+        save_data(admin_address, total_points, total_withdrawn, 
+                  new_fee, new_min_withdrawal, new_rate, emergency_pause);
+    }
+    
+    elseif (op == op::emergency_pause) {
+        throw_unless(error::unauthorized, equal_slices(sender_address, admin_address));
+        
+        int pause_state = in_msg_body~load_uint(1);
+        
+        save_data(admin_address, total_points, total_withdrawn, 
+                  withdrawal_fee, min_withdrawal, points_to_ton_rate, pause_state);
+    }
+}
+
+;; Get methods
+(int) get_withdrawal_fee() method_id {
+    (_, _, _, int fee, _, _, _) = load_data();
+    return fee;
+}
+
+(int) get_min_withdrawal() method_id {
+    (_, _, _, _, int min_withdrawal, _, _) = load_data();
+    return min_withdrawal;
+}
+
+(int) get_points_rate() method_id {
+    (_, _, _, _, _, int rate, _) = load_data();
+    return rate;
+}
+
+(int) is_paused() method_id {
+    (_, _, _, _, _, _, int paused) = load_data();
+    return paused;
+}
+
+(int, int) get_stats() method_id {
+    (_, int total_points, int total_withdrawn, _, _, _, _) = load_data();
+    return (total_points, total_withdrawn);
+}
