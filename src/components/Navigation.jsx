@@ -8,9 +8,10 @@ const Navigation = () => {
 
   const navItems = [
     { path: '/', icon: '🏠', label: 'Home' },
+    { path: '/career', icon: '💼', label: 'Career' },
     { path: '/business', icon: '🏢', label: 'Business' },
-    { path: '/invest', icon: '📈', label: 'Invest' },
     { path: '/social', icon: '👥', label: 'Social' },
+    { path: '/dynasty', icon: '👑', label: 'Dynasty' },
     { path: '/profile', icon: '👤', label: 'Profile' },
   ];
 
@@ -19,7 +20,7 @@ const Navigation = () => {
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
-          
+
           return (
             <button
               key={item.path}
