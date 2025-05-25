@@ -8,313 +8,443 @@ import { antiCheatDetector } from '../utils/antiCheatDetector.js';
 const useGameStore = create(
   persist(
     (set, get) => ({
-      // Player data
+      // Player Life Stats
       player: {
         id: null,
-        username: null,
-        points: GAME_CONFIG.STARTING_POINTS,
+        username: '',
+        cash: 5000,
+        monthlyIncome: 0,
+        creditScore: 650,
+        happiness: 70,
+        health: 80,
+        energy: 80,
+        stress: 20,
+        experience: 0,
         level: 1,
-        xp: 0,
         totalEarned: 0,
-        lastActive: Date.now(),
-        accountCreated: Date.now(),
-        premiumTier: null,
-        societyTier: 'NONE'
+        lastLogin: new Date(),
+        createdAt: new Date(),
       },
 
-      // Businesses owned by player
-      businesses: {},
-
-      // Security and anti-cheat
-      securityMetrics: {
-        deviceFingerprint: null,
-        violations: [],
-        riskScore: 0,
-        lastSecurityCheck: Date.now()
+      // Career & Education
+      career: {
+        currentJob: null,
+        education: 'high_school',
+        skills: [],
+        workExperience: 0,
+        jobApplications: [],
+        certifications: [],
       },
 
-      // Daily limits tracking
-      dailyActions: {
-        adWatches: 0,
-        trades: 0,
-        businessClaims: 0,
-        lastReset: Date.now()
+      // Housing & Living
+      housing: {
+        currentHousing: 'homeless',
+        ownedProperties: [],
+        mortgages: [],
+        utilities: [],
+        monthlyHousingCost: 0,
       },
 
-      // Action logging for security
-      actionLog: [],
+      // Banking & Finance
+      banking: {
+        accounts: [
+          { type: 'checking', balance: 5000, interestRate: 0.001 }
+        ],
+        loans: [],
+        creditCards: [],
+        investments: [],
+        creditHistory: [],
+        monthlyDebtPayments: 0,
+      },
 
-      // === CORE GAME ACTIONS ===
+      // Relationships & Social
+      relationships: [
+        { id: 1, name: 'Sarah Johnson', type: 'family', points: 75, lastInteraction: new Date() },
+        { id: 2, name: 'Mike Chen', type: 'friends', points: 60, lastInteraction: new Date() },
+      ],
 
-      addPoints: (amount) => {
-        set((state) => ({
+      // Business Empire
+      businesses: [],
+      businessStats: {
+        totalBusinesses: 0,
+        monthlyBusinessIncome: 0,
+        totalBusinessValue: 0,
+      },
+
+      // Game Progress
+      dynasty: {
+        tier: 'startup',
+        legacyPoints: 0,
+        traits: [],
+        focus: null,
+        generation: 'first_generation',
+        age: 0,
+        activeProjects: [],
+        completedProjects: []
+      },
+      achievements: [],
+      statistics: {
+        totalDaysPlayed: 0,
+        totalMoneyEarned: 0,
+        businessesOwned: 0,
+        relationshipsFormed: 0,
+        jobsHeld: 0,
+        educationCompleted: [],
+      },
+
+      // Daily/Time Management
+      gameTime: {
+        currentDate: new Date(),
+        daysPassed: 0,
+        monthsPassed: 0,
+        yearsPassed: 0,
+      },
+
+      // Settings & Preferences
+      settings: {
+        notifications: true,
+        autoSave: true,
+        difficulty: 'normal',
+        currency: 'USD',
+      },
+
+      // Actions
+      updatePlayer: (updates) => set((state) => ({
+        player: { ...state.player, ...updates }
+      })),
+
+      updateCareer: (updates) => set((state) => ({
+        career: { ...state.career, ...updates }
+      })),
+
+      updateHousing: (updates) => set((state) => ({
+        housing: { ...state.housing, ...updates }
+      })),
+
+      updateBanking: (updates) => set((state) => ({
+        banking: { ...state.banking, ...updates }
+      })),
+
+      addRelationship: (relationship) => set((state) => ({
+        relationships: [...state.relationships, { ...relationship, id: Date.now() }]
+      })),
+
+      updateRelationship: (id, updates) => set((state) => ({
+        relationships: state.relationships.map(rel =>
+          rel.id === id ? { ...rel, ...updates } : rel
+        )
+      })),
+
+      addBusiness: (business) => set((state) => ({
+        businesses: [...state.businesses, { ...business, id: Date.now(), purchaseDate: new Date() }],
+        businessStats: {
+          ...state.businessStats,
+          totalBusinesses: state.businesses.length + 1,
+        }
+      })),
+
+      updateBusiness: (id, updates) => set((state) => ({
+        businesses: state.businesses.map(biz =>
+          biz.id === id ? { ...biz, ...updates } : biz
+        )
+      })),
+
+      // Financial Actions
+      addIncome: (amount, source = 'unknown') => set((state) => {
+        const newCash = state.player.cash + amount;
+        const newTotalEarned = state.player.totalEarned + amount;
+
+        return {
           player: {
             ...state.player,
-            points: state.player.points + amount,
-            totalEarned: state.player.totalEarned + amount,
-            lastActive: Date.now()
+            cash: newCash,
+            totalEarned: newTotalEarned,
+          },
+          statistics: {
+            ...state.statistics,
+            totalMoneyEarned: newTotalEarned,
           }
-        }));
-      },
+        };
+      }),
 
-      spendPoints: (amount) => {
-        const state = get();
-        if (state.player.points >= amount) {
-          set((state) => ({
+      spendMoney: (amount, category = 'unknown') => set((state) => {
+        if (state.player.cash >= amount) {
+          return {
             player: {
               ...state.player,
-              points: state.player.points - amount,
-              lastActive: Date.now()
+              cash: state.player.cash - amount,
             }
-          }));
-          return true;
+          };
         }
-        return false;
-      },
+        return state; // Not enough money
+      }),
 
-      // === BUSINESS MANAGEMENT ===
+      // Loan Management
+      addLoan: (loan) => set((state) => ({
+        banking: {
+          ...state.banking,
+          loans: [...state.banking.loans, { ...loan, id: Date.now(), startDate: new Date() }],
+          monthlyDebtPayments: state.banking.monthlyDebtPayments + loan.monthlyPayment,
+        },
+        player: {
+          ...state.player,
+          cash: state.player.cash + loan.amount,
+        }
+      })),
 
-      buyBusiness: (businessId) => {
-        const state = get();
-        const business = INDUSTRIES_CONFIG[businessId];
-        if (!business) return false;
+      payLoan: (loanId, amount) => set((state) => {
+        const loan = state.banking.loans.find(l => l.id === loanId);
+        if (!loan || state.player.cash < amount) return state;
 
-        const currentLevel = state.businesses[businessId] || 0;
-        const cost = calculateBusinessCost(business, currentLevel);
+        const updatedLoans = state.banking.loans.map(l => {
+          if (l.id === loanId) {
+            const newBalance = Math.max(0, l.remainingBalance - amount);
+            return { ...l, remainingBalance: newBalance };
+          }
+          return l;
+        }).filter(l => l.remainingBalance > 0);
 
-        if (state.player.points >= cost) {
-          set((state) => ({
+        return {
+          banking: {
+            ...state.banking,
+            loans: updatedLoans,
+            monthlyDebtPayments: updatedLoans.reduce((sum, l) => sum + l.monthlyPayment, 0),
+          },
+          player: {
+            ...state.player,
+            cash: state.player.cash - amount,
+          }
+        };
+      }),
+
+      // Time Management
+      advanceTime: (days = 1) => set((state) => {
+        const newDate = new Date(state.gameTime.currentDate);
+        newDate.setDate(newDate.getDate() + days);
+
+        const daysPassed = state.gameTime.daysPassed + days;
+        const monthsPassed = Math.floor(daysPassed / 30);
+        const yearsPassed = Math.floor(daysPassed / 365);
+
+        // Calculate monthly income/expenses
+        let monthlyIncome = state.player.monthlyIncome;
+        let monthlyExpenses = state.housing.monthlyHousingCost + state.banking.monthlyDebtPayments;
+
+        // Add business income
+        const businessIncome = state.businesses.reduce((sum, business) => {
+          return sum + (business.monthlyIncome || 0);
+        }, 0);
+
+        monthlyIncome += businessIncome;
+
+        // If a month has passed, process monthly transactions
+        if (Math.floor(daysPassed / 30) > Math.floor((daysPassed - days) / 30)) {
+          const netIncome = monthlyIncome - monthlyExpenses;
+
+          return {
+            ...state,
             player: {
               ...state.player,
-              points: state.player.points - cost,
-              lastActive: Date.now()
+              cash: Math.max(0, state.player.cash + netIncome),
+              totalEarned: state.player.totalEarned + Math.max(0, netIncome),
             },
-            businesses: {
-              ...state.businesses,
-              [businessId]: currentLevel + 1
+            gameTime: {
+              currentDate: newDate,
+              daysPassed,
+              monthsPassed,
+              yearsPassed,
+            },
+            statistics: {
+              ...state.statistics,
+              totalDaysPlayed: daysPassed,
             }
-          }));
-
-          // Add XP for business purchase
-          get().addXP(10);
-          return true;
+          };
         }
-        return false;
-      },
-
-      // Calculate total passive income
-      calculatePassiveIncome: () => {
-        const state = get();
-        let totalIncome = 0;
-
-        Object.entries(state.businesses).forEach(([businessId, level]) => {
-          if (level > 0) {
-            const business = INDUSTRIES_CONFIG[businessId];
-            if (business) {
-              totalIncome += calculateBusinessIncome(business, level - 1);
-            }
-          }
-        });
-
-        return totalIncome;
-      },
-
-      // Collect passive income
-      collectPassiveIncome: () => {
-        const state = get();
-        const now = Date.now();
-        const timeDiff = now - state.player.lastActive;
-        const hoursOffline = timeDiff / (1000 * 60 * 60);
-
-        if (hoursOffline > 0.1) { // Minimum 6 minutes offline
-          const hourlyIncome = state.calculatePassiveIncome();
-          const offlineEarnings = Math.floor(hourlyIncome * Math.min(hoursOffline, 24)); // Max 24 hours
-
-          if (offlineEarnings > 0) {
-            state.addPoints(offlineEarnings);
-            return offlineEarnings;
-          }
-        }
-        return 0;
-      },
-
-      // === LEVEL SYSTEM ===
-
-      addXP: (amount) => {
-        const state = get();
-        const newXP = state.player.xp + amount;
-        const xpForNextLevel = GAME_CONFIG.XP_PER_LEVEL * state.player.level;
-
-        if (newXP >= xpForNextLevel) {
-          set((state) => ({
-            player: {
-              ...state.player,
-              xp: newXP - xpForNextLevel,
-              level: state.player.level + 1
-            }
-          }));
-        } else {
-          set((state) => ({
-            player: {
-              ...state.player,
-              xp: newXP
-            }
-          }));
-        }
-      },
-
-      // === SECURITY SYSTEM ===
-
-      initializeSecurity: async (deviceData) => {
-        await antiCheatDetector.initialize();
-
-        set((state) => ({
-          securityMetrics: {
-            ...state.securityMetrics,
-            deviceFingerprint: antiCheatDetector.deviceFingerprint,
-            lastSecurityCheck: Date.now()
-          }
-        }));
-      },
-
-      logAction: (actionType, metadata = {}) => {
-        const state = get();
-        const now = Date.now();
-
-        // Basic rate limiting
-        if (!antiCheatDetector.checkClickRate()) {
-          return { allowed: false, reason: 'Rate limit exceeded' };
-        }
-
-        // Check daily limits
-        const dailyLimit = SecurityCalculator.calculateDailyLimit(
-          SECURITY_CONFIG.RATE_LIMITS.DAILY_ACTIONS[actionType] || 1000,
-          state.player.level,
-          state.player.societyTier
-        );
-
-        const currentCount = state.dailyActions[actionType.toLowerCase()] || 0;
-        if (currentCount >= dailyLimit) {
-          return { allowed: false, reason: 'Daily limit reached' };
-        }
-
-        // Log the action
-        const logEntry = {
-          type: actionType,
-          timestamp: now,
-          metadata,
-          playerId: state.player.id
-        };
-
-        set((state) => ({
-          actionLog: [...state.actionLog.slice(-99), logEntry], // Keep last 100 actions
-          securityMetrics: {
-            ...state.securityMetrics,
-            riskScore: antiCheatDetector.getRiskScore()
-          }
-        }));
-
-        return { allowed: true };
-      },
-
-      // === DAILY LIMITS ===
-
-      checkDailyLimits: (actionType) => {
-        const state = get();
-        const limit = SecurityCalculator.calculateDailyLimit(
-          SECURITY_CONFIG.RATE_LIMITS.DAILY_ACTIONS[actionType] || 1000,
-          state.player.level,
-          state.player.societyTier
-        );
-
-        const currentCount = state.dailyActions[actionType.toLowerCase()] || 0;
 
         return {
-          allowed: currentCount < limit,
-          current: currentCount,
-          limit,
-          remaining: Math.max(0, limit - currentCount)
+          ...state,
+          gameTime: {
+            currentDate: newDate,
+            daysPassed,
+            monthsPassed,
+            yearsPassed,
+          },
+          statistics: {
+            ...state.statistics,
+            totalDaysPlayed: daysPassed,
+          }
         };
-      },
+      }),
 
-      resetDailyActions: () => {
-        const now = Date.now();
-        const state = get();
-        const lastReset = state.dailyActions.lastReset;
-        const daysPassed = (now - lastReset) / (1000 * 60 * 60 * 24);
-
-        if (daysPassed >= 1) {
-          set((state) => ({
-            dailyActions: {
-              adWatches: 0,
-              trades: 0,
-              businessClaims: 0,
-              lastReset: now
-            }
-          }));
+      // Job Management
+      applyForJob: (job) => set((state) => ({
+        career: {
+          ...state.career,
+          jobApplications: [...state.career.jobApplications, {
+            id: Date.now(),
+            job,
+            status: 'pending',
+            appliedDate: new Date(),
+          }]
         }
-      },
+      })),
 
-      // === UTILITY FUNCTIONS ===
+      acceptJob: (job) => set((state) => ({
+        career: {
+          ...state.career,
+          currentJob: job,
+          jobApplications: state.career.jobApplications.filter(app => app.job.id !== job.id),
+        },
+        player: {
+          ...state.player,
+          monthlyIncome: job.salary,
+        },
+        statistics: {
+          ...state.statistics,
+          jobsHeld: state.statistics.jobsHeld + 1,
+        }
+      })),
 
-      initializePlayer: (userData) => {
-        set((state) => ({
-          player: {
-            ...state.player,
-            id: userData.id,
-            username: userData.username,
-            lastActive: Date.now()
-          }
-        }));
-      },
+      quitJob: () => set((state) => ({
+        career: {
+          ...state.career,
+          currentJob: null,
+        },
+        player: {
+          ...state.player,
+          monthlyIncome: 0,
+        }
+      })),
 
-      setPlayer: (playerData) => {
-        set((state) => ({
-          player: {
-            ...state.player,
-            ...playerData,
-            lastActive: Date.now()
-          }
-        }));
-      },
+      // Housing Management
+      moveToHousing: (housingType, cost) => set((state) => {
+        if (state.player.cash >= cost) {
+          return {
+            player: {
+              ...state.player,
+              cash: state.player.cash - cost,
+            },
+            housing: {
+              ...state.housing,
+              currentHousing: housingType,
+              monthlyHousingCost: cost,
+            }
+          };
+        }
+        return state;
+      }),
 
-      earnPoints: (amount) => {
-        set((state) => ({
-          player: {
-            ...state.player,
-            points: state.player.points + amount,
-            totalEarned: state.player.totalEarned + amount,
-            lastActive: Date.now()
-          }
-        }));
-      },
+      // Achievement System
+      addAchievement: (achievement) => set((state) => ({
+        achievements: [...state.achievements, { ...achievement, unlockedAt: new Date() }]
+      })),
 
-      // Get security status
-      getSecurityStatus: () => {
-        const state = get();
-        return {
-          riskScore: state.securityMetrics.riskScore,
-          violations: state.securityMetrics.violations.length,
-          shouldBan: antiCheatDetector.shouldBan(),
-          deviceFingerprint: state.securityMetrics.deviceFingerprint
-        };
-      },
+      // Dynasty Management
+      updateDynasty: (updates) => set((state) => ({
+        dynasty: { ...state.dynasty, ...updates }
+      })),
 
-      // Reset security (for testing)
-      resetSecurity: () => {
-        antiCheatDetector.reset();
-        set((state) => ({
-          securityMetrics: {
-            ...state.securityMetrics,
-            violations: [],
-            riskScore: 0
-          }
-        }));
-      }
+      addLegacyPoints: (amount) => set((state) => ({
+        dynasty: {
+          ...state.dynasty,
+          legacyPoints: (state.dynasty.legacyPoints || 0) + amount
+        }
+      })),
+
+      spendLegacyPoints: (amount) => set((state) => {
+        if ((state.dynasty.legacyPoints || 0) >= amount) {
+          return {
+            dynasty: {
+              ...state.dynasty,
+              legacyPoints: (state.dynasty.legacyPoints || 0) - amount
+            }
+          };
+        }
+        return state;
+      }),
+
+      // Reset Game
+      resetGame: () => set(() => ({
+        player: {
+          id: null,
+          username: '',
+          cash: 5000,
+          monthlyIncome: 0,
+          creditScore: 650,
+          happiness: 70,
+          health: 80,
+          energy: 80,
+          stress: 20,
+          experience: 0,
+          level: 1,
+          totalEarned: 0,
+          lastLogin: new Date(),
+          createdAt: new Date(),
+        },
+        career: {
+          currentJob: null,
+          education: 'high_school',
+          skills: [],
+          workExperience: 0,
+          jobApplications: [],
+          certifications: [],
+        },
+        housing: {
+          currentHousing: 'homeless',
+          ownedProperties: [],
+          mortgages: [],
+          utilities: [],
+          monthlyHousingCost: 0,
+        },
+        banking: {
+          accounts: [
+            { type: 'checking', balance: 5000, interestRate: 0.001 }
+          ],
+          loans: [],
+          creditCards: [],
+          investments: [],
+          creditHistory: [],
+          monthlyDebtPayments: 0,
+        },
+        relationships: [],
+        businesses: [],
+        businessStats: {
+          totalBusinesses: 0,
+          monthlyBusinessIncome: 0,
+          totalBusinessValue: 0,
+        },
+
+        // Dynasty Management
+        dynasty: {
+          tier: 'startup',
+          legacyPoints: 0,
+          traits: [],
+          focus: null,
+          generation: 'first_generation',
+          age: 0,
+          activeProjects: [],
+          completedProjects: []
+        },
+        achievements: [],
+        statistics: {
+          totalDaysPlayed: 0,
+          totalMoneyEarned: 0,
+          businessesOwned: 0,
+          relationshipsFormed: 0,
+          jobsHeld: 0,
+          educationCompleted: [],
+        },
+        gameTime: {
+          currentDate: new Date(),
+          daysPassed: 0,
+          monthsPassed: 0,
+          yearsPassed: 0,
+        },
+      })),
     }),
     {
-      name: 'telegram-billionaire-game',
-      version: 2 // Increment version for migration
+      name: 'billionaire-empire-game',
+      version: 2,
     }
   )
 );
