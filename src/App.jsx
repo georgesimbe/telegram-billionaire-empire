@@ -8,8 +8,11 @@ import BusinessPage from './pages/BusinessPage';
 import InvestmentPage from './pages/InvestmentPage';
 import SocialPage from './pages/SocialPage';
 import ProfilePage from './pages/ProfilePage';
+import CareerPage from './pages/CareerPage';
+import DynastyPage from './pages/DynastyPage';
 import Navigation from './components/Navigation';
 import AntiCheatWrapper from './components/AntiCheatWrapper';
+import ParticleBackground from './components/ParticleBackground';
 
 const manifestUrl = 'https://raw.githubusercontent.com/ton-community/tutorials/main/03-client/test/public/tonconnect-manifest.json';
 
@@ -107,16 +110,21 @@ function App() {
     <TonConnectUIProvider manifestUrl={manifestUrl}>
       <Router>
         <AntiCheatWrapper>
-          <div className="min-h-screen bg-gray-900 text-white pb-16">
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/business" element={<BusinessPage />} />
-              <Route path="/invest" element={<InvestmentPage />} />
-              <Route path="/social" element={<SocialPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-            <Navigation />
+          <div className="min-h-screen bg-gray-900 text-white pb-16 relative">
+            <ParticleBackground intensity="low" />
+            <div className="relative z-10">
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/business" element={<BusinessPage />} />
+                <Route path="/career" element={<CareerPage />} />
+                <Route path="/invest" element={<InvestmentPage />} />
+                <Route path="/social" element={<SocialPage />} />
+                <Route path="/dynasty" element={<DynastyPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+              <Navigation />
+            </div>
           </div>
         </AntiCheatWrapper>
       </Router>
