@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import EconomicDashboard from '../components/EconomicDashboard';
 import {
   STAKING_POOLS,
@@ -25,7 +25,7 @@ const StakingPage = () => {
     updateStaking,
     submitProposal,
     voteOnProposal
-  } = useGameStore();
+  } = useIntegratedGameStore();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedPool, setSelectedPool] = useState(null);

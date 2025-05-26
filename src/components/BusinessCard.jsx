@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { formatNumber } from '../utils/formatters';
 
 const BusinessCard = ({ business, isOwned = false, onBuy, onClaim, onScrap, onUpgrade }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { player } = useGameStore();
+  const { player } = useIntegratedGameStore();
 
   const canAfford = player.cash >= business.cost;
   const canClaim = isOwned && business.lastClaim 

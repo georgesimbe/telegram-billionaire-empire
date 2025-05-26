@@ -21,7 +21,7 @@ import {
   UsersIcon,
   ShieldCheckIcon
 } from '@heroicons/react/24/outline';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { formatNumber } from '../utils/formatters';
 import { GAME_CONFIG } from '../config/gameConfig';
 import { TonIntegration } from '../utils/tonIntegration';
@@ -43,7 +43,7 @@ const ProfilePage = () => {
     achievements,
     calculateEconomicStatus,
     updateMarketInfluence
-  } = useGameStore();
+  } = useIntegratedGameStore();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);

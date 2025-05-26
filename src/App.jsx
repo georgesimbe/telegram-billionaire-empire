@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 // import { initMiniApp, useMiniApp, useViewport } from '@telegram-apps/sdk-react';
-import useGameStore from './store/gameStore';
+import useIntegratedGameStore from './store/integratedGameStore';
 import HomePage from './pages/HomePage';
 import BusinessPage from './pages/BusinessPage';
 import InvestmentPage from './pages/InvestmentPage';
@@ -21,35 +21,34 @@ function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   // const miniApp = useMiniApp();
   // const viewport = useViewport();
-  const initializePlayer = useGameStore(state => state.initializePlayer);
-  const resetDailyActions = useGameStore(state => state.resetDailyActions);
-  const setPlayer = useGameStore(state => state.setPlayer);
-  const earnPoints = useGameStore(state => state.earnPoints);
+  const initializeGame = useIntegratedGameStore(state => state.initializeGame);
+  const resetDailyActions = useIntegratedGameStore(state => state.resetDailyActions);
+  const processGameCycle = useIntegratedGameStore(state => state.processGameCycle);
 
   // Debug logging (reduced)
   console.log('App component rendered, isInitialized:', isInitialized);
 
   useEffect(() => {
-    // Simplified initialization for development
+    // Simplified initialization for development using new integrated store
     const init = async () => {
       try {
-        console.log('Initializing app...');
+        console.log('Initializing app with integrated store...');
 
-        // Initialize player with mock data
-        console.log('Initializing player...');
-        if (typeof initializePlayer === 'function') {
-          initializePlayer({
+        // Initialize game with mock data using new integrated method
+        console.log('Initializing game...');
+        if (typeof initializeGame === 'function') {
+          const result = initializeGame({
             id: 12345,
             username: 'testuser',
             first_name: 'Test',
             last_name: 'User'
           });
-          console.log('Player initialized successfully');
+          console.log('Game initialization result:', result);
         } else {
-          console.error('initializePlayer is not a function:', typeof initializePlayer);
+          console.error('initializeGame is not a function:', typeof initializeGame);
         }
 
-        console.log('Player initialized, setting app as initialized...');
+        console.log('Game initialized, setting app as initialized...');
         setIsInitialized(true);
         console.log('App initialization complete!');
       } catch (error) {
@@ -70,7 +69,7 @@ function App() {
       }
     }, 3000);
 
-    // Reset daily actions on app launch
+    // Reset daily actions on app launch using new method
     try {
       if (typeof resetDailyActions === 'function') {
         resetDailyActions();
@@ -82,14 +81,17 @@ function App() {
       console.error('Failed to reset daily actions:', error);
     }
 
-    // Check daily actions every minute
+    // Check daily actions every minute and process daily cycles
     const interval = setInterval(() => {
       try {
         if (typeof resetDailyActions === 'function') {
           resetDailyActions();
         }
+        if (typeof processGameCycle === 'function') {
+          processGameCycle('daily');
+        }
       } catch (error) {
-        console.error('Failed to reset daily actions in interval:', error);
+        console.error('Failed to process daily cycle:', error);
       }
     }, 60000);
 

@@ -1,23 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { EconomicSimulator, ECONOMIC_CONFIG } from '../config/economicSimulationConfig';
 
 const EconomicDashboard = () => {
   const [selectedTab, setSelectedTab] = useState('overview');
   
-  const player = useGameStore(state => state.player);
-  const businesses = useGameStore(state => state.businesses);
-  const staking = useGameStore(state => state.staking);
-  const economics = useGameStore(state => state.economics);
-  const achievements = useGameStore(state => state.achievements);
+  const player = useIntegratedGameStore(state => state.player);
+  const businesses = useIntegratedGameStore(state => state.businesses);
+  const staking = useIntegratedGameStore(state => state.staking);
+  const economics = useIntegratedGameStore(state => state.economics);
+  const achievements = useIntegratedGameStore(state => state.achievements);
   
-  const claimDailyLoginReward = useGameStore(state => state.claimDailyLoginReward);
-  const checkAndAwardAchievements = useGameStore(state => state.checkAndAwardAchievements);
-  const calculateEconomicStatus = useGameStore(state => state.calculateEconomicStatus);
-  const processMonthlyEconomics = useGameStore(state => state.processMonthlyEconomics);
-  const triggerEconomicEvent = useGameStore(state => state.triggerEconomicEvent);
-  const earnGovernanceRewards = useGameStore(state => state.earnGovernanceRewards);
+  const claimDailyLoginReward = useIntegratedGameStore(state => state.claimDailyLoginReward);
+  const checkAndAwardAchievements = useIntegratedGameStore(state => state.checkAndAwardAchievements);
+  const calculateEconomicStatus = useIntegratedGameStore(state => state.calculateEconomicStatus);
+  const processMonthlyEconomics = useIntegratedGameStore(state => state.processMonthlyEconomics);
+  const triggerEconomicEvent = useIntegratedGameStore(state => state.triggerEconomicEvent);
+  const earnGovernanceRewards = useIntegratedGameStore(state => state.earnGovernanceRewards);
   
   // Calculate current economic status
   const totalWealth = player.cash + player.totalEarned + 

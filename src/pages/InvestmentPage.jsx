@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { formatNumber } from '../utils/formatters';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
@@ -8,10 +8,10 @@ import { Doughnut } from 'react-chartjs-2';
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const InvestmentPage = () => {
-  const player = useGameStore(state => state.player);
-  const investments = useGameStore(state => state.investments);
-  const earnPoints = useGameStore(state => state.earnPoints);
-  const logAction = useGameStore(state => state.logAction);
+  const player = useIntegratedGameStore(state => state.player);
+  const investments = useIntegratedGameStore(state => state.investments);
+  const earnPoints = useIntegratedGameStore(state => state.earnPoints);
+  const logAction = useIntegratedGameStore(state => state.logAction);
   
   const [selectedAsset, setSelectedAsset] = useState('stocks');
   const [investAmount, setInvestAmount] = useState('');

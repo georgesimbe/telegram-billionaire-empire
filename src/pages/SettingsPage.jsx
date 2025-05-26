@@ -16,11 +16,11 @@ import {
   QuestionMarkCircleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 
 const SettingsPage = () => {
-  const { player, settings, updatePlayer, updateSettings } = useGameStore();
+  const { player, settings, updatePlayer, updateSettings } = useIntegratedGameStore();
   const wallet = useTonWallet();
   const [activeTab, setActiveTab] = useState('general');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

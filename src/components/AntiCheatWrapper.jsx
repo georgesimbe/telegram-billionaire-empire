@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { antiCheatDetector } from '../utils/antiCheatDetector';
 
 const AntiCheatWrapper = ({ children }) => {
-  const logAction = useGameStore(state => state.logAction);
-  const initializeSecurity = useGameStore(state => state.initializeSecurity);
-  const getSecurityStatus = useGameStore(state => state.getSecurityStatus);
+  const logAction = useIntegratedGameStore(state => state.logAction);
+  const initializeSecurity = useIntegratedGameStore(state => state.initializeSecurity);
+  const getSecurityStatus = useIntegratedGameStore(state => state.getSecurityStatus);
   
   const [securityInitialized, setSecurityInitialized] = useState(false);
   const clickCount = useRef(0);

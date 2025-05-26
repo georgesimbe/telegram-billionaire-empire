@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { formatNumber } from '../utils/formatters';
 import { HOUSING_TYPES } from '../config/housingConfig';
 import { JOB_CATEGORIES } from '../config/jobsConfig';
@@ -10,15 +10,15 @@ import AnimatedButton from '../components/AnimatedButton';
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const player = useGameStore(state => state.player);
-  const career = useGameStore(state => state.career);
-  const housing = useGameStore(state => state.housing);
-  const banking = useGameStore(state => state.banking);
-  const relationships = useGameStore(state => state.relationships);
-  const businesses = useGameStore(state => state.businesses);
-  const gameTime = useGameStore(state => state.gameTime);
-  const advanceTime = useGameStore(state => state.advanceTime);
-  const addIncome = useGameStore(state => state.addIncome);
+  const player = useIntegratedGameStore(state => state.player);
+  const career = useIntegratedGameStore(state => state.career);
+  const housing = useIntegratedGameStore(state => state.housing);
+  const banking = useIntegratedGameStore(state => state.banking);
+  const relationships = useIntegratedGameStore(state => state.relationships);
+  const businesses = useIntegratedGameStore(state => state.businesses);
+  const gameTime = useIntegratedGameStore(state => state.gameTime);
+  const advanceTime = useIntegratedGameStore(state => state.advanceTime);
+  const addIncome = useIntegratedGameStore(state => state.addIncome);
 
   const [notifications, setNotifications] = useState([]);
   const [showWelcome, setShowWelcome] = useState(false);

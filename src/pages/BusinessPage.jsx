@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { EXPANDED_INDUSTRIES_CONFIG, INDUSTRY_SECTORS, calculateBusinessCost, calculateBusinessIncome, getUnlockedBusinesses, getBusinessesBySector, calculateSupplyChainBonus } from '../config/expandedIndustriesConfig';
 import HintIcon, { QuickHint, GAME_HINTS } from '../components/HintIcon';
 import { formatNumber } from '../utils/formatters';
 import UpgradeModal from '../components/UpgradeModal';
-import { BUSINESS_CONFIG } from '../config/businessConfig';
+import { BUSINESSES_CONFIG } from '../config/businessConfig';
 import {
   RESOURCE_TYPES,
   PRODUCTION_RECIPES,
@@ -37,7 +37,7 @@ const BusinessPage = () => {
     player,
     spendMoney,
     addIncome
-  } = useGameStore();
+  } = useIntegratedGameStore();
 
   const [activeTab, setActiveTab] = useState('marketplace');
   const [selectedSector, setSelectedSector] = useState('all');

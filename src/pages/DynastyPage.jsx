@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import {
   DYNASTY_TIERS,
   DYNASTY_TRAITS,
@@ -22,7 +22,7 @@ const DynastyPage = () => {
     spendPoints,
     netWorth,
     totalRevenue
-  } = useGameStore();
+  } = useIntegratedGameStore();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedTrait, setSelectedTrait] = useState(null);

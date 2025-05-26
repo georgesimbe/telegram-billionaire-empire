@@ -14,7 +14,7 @@ import {
   CheckCircleIcon,
   XCircleIcon
 } from '@heroicons/react/24/outline';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import { formatNumber } from '../utils/formatters';
 import HintIcon, { QuickHint } from '../components/HintIcon';
 import {
@@ -39,7 +39,7 @@ const CareerPage = () => {
     acceptJob,
     quitJob,
     improveSkill
-  } = useGameStore();
+  } = useIntegratedGameStore();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedEducation, setSelectedEducation] = useState(null);

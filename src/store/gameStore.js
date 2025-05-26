@@ -57,6 +57,9 @@ const useGameStore = create(
         totalEarned: 0,
         lastLogin: new Date(),
         createdAt: new Date(),
+        initialized: false,
+        dailyActionsRemaining: 10,
+        lastDailyReset: new Date(),
       },
 
       // Career & Education
@@ -160,6 +163,105 @@ const useGameStore = create(
         difficulty: 'normal',
         currency: 'USD',
       },
+
+      // Security System
+      security: {
+        initialized: false,
+        deviceData: null,
+        sessionId: null,
+        startTime: null,
+        actionLog: [],
+        recentClicks: []
+      },
+
+      // Security Actions
+      initializeSecurity: (deviceData) => set((state) => ({
+        security: {
+          ...state.security,
+          deviceData,
+          initialized: true,
+          sessionId: Date.now().toString(),
+          startTime: new Date()
+        }
+      })),
+
+      logAction: (actionType, data = {}) => {
+        const state = get();
+        const now = Date.now();
+        const security = state.security || {};
+        
+        // Simple rate limiting for clicks
+        if (actionType === 'CLICK') {
+          const recentClicks = security.recentClicks || [];
+          const oneSecondAgo = now - 1000;
+          const filteredClicks = recentClicks.filter(time => time > oneSecondAgo);
+          
+          if (filteredClicks.length > 10) {
+            return { allowed: false, reason: 'Too many clicks' };
+          }
+          
+          set((state) => ({
+            security: {
+              ...state.security,
+              recentClicks: [...filteredClicks, now]
+            }
+          }));
+        }
+        
+        // Log the action
+        set((state) => ({
+          security: {
+            ...state.security,
+            actionLog: [
+              ...(state.security?.actionLog || []).slice(-100), // Keep only last 100 actions
+              {
+                type: actionType,
+                data,
+                timestamp: now,
+                sessionId: security.sessionId
+              }
+            ]
+          }
+        }));
+        
+        return { allowed: true };
+      },
+
+      getSecurityStatus: () => {
+        const state = get();
+        const security = state.security || {};
+        
+        // Simple security check - would be more sophisticated in production
+        const suspiciousActions = (security.actionLog || []).filter(action => 
+          action.type === 'DEV_TOOLS_DETECTED' || 
+          action.type === 'AUTOMATION_DETECTED'
+        );
+        
+        return {
+          shouldBan: suspiciousActions.length > 5,
+          warningLevel: Math.min(3, Math.floor(suspiciousActions.length / 2)),
+          totalActions: (security.actionLog || []).length
+        };
+      },
+
+      // Daily Actions Reset
+      resetDailyActions: () => set((state) => ({
+        player: {
+          ...state.player,
+          dailyActionsRemaining: GAME_CONFIG?.dailyActions || 10,
+          lastDailyReset: new Date()
+        }
+      })),
+
+      // Initialize Player
+      initializePlayer: (playerData = {}) => set((state) => ({
+        player: {
+          ...state.player,
+          ...playerData,
+          initialized: true,
+          lastLogin: new Date()
+        }
+      })),
 
       // Actions
       updatePlayer: (updates) => set((state) => ({
@@ -809,512 +911,7 @@ const useGameStore = create(
               ...state.staking,
               pendingRewards: state.staking.pendingRewards + (hasInnovationStake.amount * bonus * 0.1)
             };
-          }
+          } 
         }
 
         return { ...state, ...stateChanges };
-      }),
-
-      // Industry Clusters and Synergies
-      calculateIndustryClusterBonuses: () => set((state) => {
-        const playerIndustries = state.businesses.map(b => b.type);
-        let totalBonus = 1.0;
-
-        // Check each cluster for bonuses
-        Object.values(INDUSTRY_CLUSTERS).forEach(cluster => {
-          const communityStats = { playersInCluster: 2 }; // Mock data - would be real in multiplayer
-          const clusterBonus = EconomicSimulator.calculateClusterBonus(
-            state.businesses,
-            cluster,
-            communityStats
-          );
-
-          if (clusterBonus > 1.0) {
-            totalBonus *= clusterBonus;
-          }
-        });
-
-        // Apply cluster bonuses to matching businesses
-        const updatedBusinesses = state.businesses.map(business => {
-          const industryCluster = Object.values(INDUSTRY_CLUSTERS).find(cluster =>
-            cluster.industries.includes(business.type)
-          );
-
-          if (industryCluster) {
-            return {
-              ...business,
-              clusterBonus: totalBonus,
-              monthlyIncome: (business.baseIncome || business.monthlyIncome || 0) * totalBonus
-            };
-          }
-
-          return business;
-        });
-
-        return {
-          businesses: updatedBusinesses,
-          economics: {
-            ...state.economics,
-            clusterBonuses: { totalBonus, lastCalculated: new Date() }
-          }
-        };
-      }),
-
-      // Community Projects
-      contributeToProject: (projectId, contribution) => set((state) => {
-        const project = COMMUNITY_PROJECTS[projectId];
-        if (!project || state.staking.tonBalance < contribution) return state;
-
-        // Check voting power requirement
-        if (state.governance.votingPower < project.requirements.min_voting_power / project.requirements.min_participants) {
-          return state;
-        }
-
-        const existingProject = state.economics.communityProjects?.find(p => p.id === projectId) || {
-          ...project,
-          id: projectId,
-          currentFunding: 0,
-          contributors: [],
-          status: 'funding',
-          startedAt: new Date()
-        };
-
-        const updatedProject = {
-          ...existingProject,
-          currentFunding: existingProject.currentFunding + contribution,
-          contributors: [
-            ...existingProject.contributors.filter(c => c.playerId !== state.player.id),
-            {
-              playerId: state.player.id,
-              contribution: (existingProject.contributors.find(c => c.playerId === state.player.id)?.contribution || 0) + contribution,
-              contributedAt: new Date()
-            }
-          ]
-        };
-
-        // Check if project is fully funded
-        if (updatedProject.currentFunding >= project.cost) {
-          updatedProject.status = 'active';
-          updatedProject.completionDate = new Date(Date.now() + project.duration * 24 * 60 * 60 * 1000);
-        }
-
-        const existingProjects = state.economics.communityProjects || [];
-        const updatedProjects = [
-          ...existingProjects.filter(p => p.id !== projectId),
-          updatedProject
-        ];
-
-        return {
-          staking: {
-            ...state.staking,
-            tonBalance: state.staking.tonBalance - contribution
-          },
-          economics: {
-            ...state.economics,
-            communityProjects: updatedProjects
-          }
-        };
-      }),
-
-      // Governance Participation Rewards
-      earnGovernanceRewards: (action, amount = 0.1) => set((state) => {
-        return {
-          staking: {
-            ...state.staking,
-            tonBalance: state.staking.tonBalance + amount
-          },
-          governance: {
-            ...state.governance,
-            governanceTokens: state.governance.governanceTokens + amount,
-            lastRewardEarned: new Date()
-          }
-        };
-      }),
-
-      // Supply Chain Trading
-      tradeResources: (resourceType, quantity, pricePerUnit, isBuying = true) => set((state) => {
-        const totalCost = quantity * pricePerUnit;
-
-        if (isBuying) {
-          if (state.player.cash < totalCost) return state;
-
-          return {
-            player: {
-              ...state.player,
-              cash: state.player.cash - totalCost
-            },
-            economics: {
-              ...state.economics,
-              resourceInventory: {
-                ...state.economics.resourceInventory,
-                [resourceType]: (state.economics.resourceInventory[resourceType] || 0) + quantity
-              }
-            }
-          };
-        } else {
-          const available = state.economics.resourceInventory[resourceType] || 0;
-          if (available < quantity) return state;
-
-          return {
-            player: {
-              ...state.player,
-              cash: state.player.cash + totalCost
-            },
-            economics: {
-              ...state.economics,
-              resourceInventory: {
-                ...state.economics.resourceInventory,
-                [resourceType]: available - quantity
-              }
-            }
-          };
-        }
-      }),
-
-      // Market Influence Calculation
-      updateMarketInfluence: () => set((state) => {
-        const totalBusinessValue = state.businesses.reduce((sum, b) => sum + (b.value || 0), 0);
-        const stakingInfluence = state.staking.totalStaked * 0.1;
-        const achievementInfluence = state.achievements.length * 10;
-
-        const marketInfluence = Math.min(100,
-          (totalBusinessValue / 100000) + stakingInfluence + achievementInfluence
-        );
-
-        return {
-          economics: {
-            ...state.economics,
-            marketInfluence,
-            lastInfluenceUpdate: new Date()
-          }
-        };
-      }),
-
-      // Housing Management
-      purchaseHousing: (housingType, mortgageType = 'cash_purchase') => set((state) => {
-        const housing = HOUSING_TYPES[housingType];
-        const mortgage = MORTGAGE_OPTIONS[mortgageType];
-
-        if (!housing || !mortgage) return state;
-
-        // Check affordability
-        if (!canAffordHousing(housingType, state.player.cash, state.player.creditScore, state.player.monthlyIncome, mortgageType)) {
-          return state;
-        }
-
-        const downPayment = housing.cost * mortgage.downPayment;
-        const monthlyPayment = calculateMortgagePayment(housing.cost, mortgage);
-        const effects = getHousingEffects(housingType);
-
-        // Create mortgage if not cash purchase
-        const newMortgage = mortgageType !== 'cash_purchase' ? {
-          id: Date.now(),
-          housingType,
-          principal: housing.cost - downPayment,
-          monthlyPayment,
-          remainingBalance: housing.cost - downPayment,
-          interestRate: mortgage.interestRate,
-          termYears: mortgage.termYears,
-          startDate: new Date()
-        } : null;
-
-        return {
-          player: {
-            ...state.player,
-            cash: state.player.cash - downPayment,
-            happiness: Math.max(0, Math.min(100, state.player.happiness + effects.happiness)),
-            health: Math.max(0, Math.min(100, state.player.health + effects.health)),
-            energy: Math.max(0, Math.min(100, state.player.energy + effects.energy)),
-            stress: Math.max(0, Math.min(100, state.player.stress + effects.stress))
-          },
-          housing: {
-            ...state.housing,
-            currentHousing: housingType,
-            ownedProperties: [...state.housing.ownedProperties, {
-              id: Date.now(),
-              type: housingType,
-              purchaseDate: new Date(),
-              purchasePrice: housing.cost,
-              mortgageId: newMortgage?.id
-            }],
-            mortgages: newMortgage ? [...state.housing.mortgages, newMortgage] : state.housing.mortgages,
-            monthlyHousingCost: housing.monthlyMaintenance + (monthlyPayment || 0)
-          }
-        };
-      }),
-
-      upgradeHousing: (newHousingType) => set((state) => {
-        return get().purchaseHousing(newHousingType, 'conventional_mortgage');
-      }),
-
-      payMortgage: (mortgageId, amount) => set((state) => {
-        const mortgage = state.housing.mortgages.find(m => m.id === mortgageId);
-        if (!mortgage || state.player.cash < amount) return state;
-
-        const updatedMortgages = state.housing.mortgages.map(m => {
-          if (m.id === mortgageId) {
-            const newBalance = Math.max(0, m.remainingBalance - amount);
-            return { ...m, remainingBalance: newBalance };
-          }
-          return m;
-        }).filter(m => m.remainingBalance > 0);
-
-        const newMonthlyCost = updatedMortgages.reduce((sum, m) => sum + m.monthlyPayment, 0) +
-          (HOUSING_TYPES[state.housing.currentHousing]?.monthlyMaintenance || 0);
-
-        return {
-          player: {
-            ...state.player,
-            cash: state.player.cash - amount
-          },
-          housing: {
-            ...state.housing,
-            mortgages: updatedMortgages,
-            monthlyHousingCost: newMonthlyCost
-          }
-        };
-      }),
-
-      // Education Management
-      enrollInEducation: (educationType) => set((state) => {
-        const education = EDUCATION_LEVELS[educationType];
-        if (!education || state.player.cash < education.cost) return state;
-
-        return {
-          player: {
-            ...state.player,
-            cash: state.player.cash - education.cost
-          },
-          career: {
-            ...state.career,
-            currentEducation: {
-              type: educationType,
-              startDate: new Date(),
-              progress: 0,
-              isComplete: false
-            }
-          }
-        };
-      }),
-
-      completeEducation: () => set((state) => {
-        const currentEd = state.career.currentEducation;
-        if (!currentEd || currentEd.isComplete) return state;
-
-        const education = EDUCATION_LEVELS[currentEd.type];
-        if (!education) return state;
-
-        return {
-          player: {
-            ...state.player,
-            cash: state.player.cash + education.completionRewards.cash,
-            experience: state.player.experience + education.completionRewards.experience
-          },
-          career: {
-            ...state.career,
-            education: currentEd.type,
-            currentEducation: null,
-            skills: [...state.career.skills, ...education.benefits.unlocks]
-          },
-          statistics: {
-            ...state.statistics,
-            educationCompleted: [...state.statistics.educationCompleted, currentEd.type]
-          }
-        };
-      }),
-
-      // Job Management
-      applyForJob: (jobId) => set((state) => {
-        const availableJobs = getAvailableJobs(state.career.education, state.career.certifications, state.career.workExperience);
-        const job = availableJobs.find(j => j.id === jobId);
-
-        if (!job) return state;
-
-        return {
-          career: {
-            ...state.career,
-            jobApplications: [...state.career.jobApplications, {
-              jobId,
-              appliedDate: new Date(),
-              status: 'pending'
-            }]
-          }
-        };
-      }),
-
-      acceptJob: (jobId) => set((state) => {
-        const availableJobs = getAvailableJobs(state.career.education, state.career.certifications, state.career.workExperience);
-        const job = availableJobs.find(j => j.id === jobId);
-
-        if (!job) return state;
-
-        const salary = calculateJobSalary(job, state.career.education, state.career.certifications, state.career.skills, state.career.workExperience);
-
-        return {
-          player: {
-            ...state.player,
-            monthlyIncome: salary
-          },
-          career: {
-            ...state.career,
-            currentJob: {
-              ...job,
-              salary,
-              startDate: new Date()
-            },
-            jobApplications: state.career.jobApplications.filter(app => app.jobId !== jobId)
-          },
-          statistics: {
-            ...state.statistics,
-            jobsHeld: state.statistics.jobsHeld + 1
-          }
-        };
-      }),
-
-      quitJob: () => set((state) => ({
-        player: {
-          ...state.player,
-          monthlyIncome: 0
-        },
-        career: {
-          ...state.career,
-          currentJob: null,
-          workExperience: state.career.workExperience + (state.career.currentJob ?
-            Math.floor((new Date() - new Date(state.career.currentJob.startDate)) / (1000 * 60 * 60 * 24)) : 0)
-        }
-      })),
-
-      // Skill Development
-      improveSkill: (skillName, points) => set((state) => {
-        const currentSkills = { ...state.career.skills };
-        currentSkills[skillName] = Math.min(100, (currentSkills[skillName] || 0) + points);
-
-        return {
-          career: {
-            ...state.career,
-            skills: currentSkills
-          }
-        };
-      }),
-
-      // Economic Status Calculation
-      calculateEconomicStatus: () => set((state) => {
-        const totalWealth = state.player.cash +
-          state.businesses.reduce((sum, b) => sum + (b.cost || 0) * (b.level || 1), 0) +
-          state.staking.tonBalance * 100; // Rough TON to USD conversion
-
-        let economicClass = 'working_class';
-        if (totalWealth >= 20000000) economicClass = 'ultra_rich';
-        else if (totalWealth >= 2000000) economicClass = 'wealthy';
-        else if (totalWealth >= 500000) economicClass = 'upper_middle';
-        else if (totalWealth >= 100000) economicClass = 'middle_class';
-
-        return {
-          player: {
-            ...state.player,
-            economicClass,
-            totalWealth
-          }
-        };
-      }),
-
-      // Reset Game
-      resetGame: () => set(() => ({
-        player: {
-          id: null,
-          username: '',
-          cash: 5000,
-          monthlyIncome: 0,
-          creditScore: 650,
-          happiness: 70,
-          health: 80,
-          energy: 80,
-          stress: 20,
-          experience: 0,
-          level: 1,
-          totalEarned: 0,
-          lastLogin: new Date(),
-          createdAt: new Date(),
-        },
-        career: {
-          currentJob: null,
-          education: 'high_school',
-          skills: [],
-          workExperience: 0,
-          jobApplications: [],
-          certifications: [],
-        },
-        housing: {
-          currentHousing: 'homeless',
-          ownedProperties: [],
-          mortgages: [],
-          utilities: [],
-          monthlyHousingCost: 0,
-        },
-        banking: {
-          accounts: [
-            { type: 'checking', balance: 5000, interestRate: 0.001 }
-          ],
-          loans: [],
-          creditCards: [],
-          investments: [],
-          creditHistory: [],
-          monthlyDebtPayments: 0,
-        },
-        relationships: [],
-        businesses: [],
-        businessStats: {
-          totalBusinesses: 0,
-          monthlyBusinessIncome: 0,
-          totalBusinessValue: 0,
-        },
-        staking: {
-          tonBalance: 1000,
-          totalStaked: 0,
-          activeStakes: {},
-          stakingHistory: [],
-          pendingRewards: 0,
-          claimedRewards: 0,
-          votingPower: 0,
-          stakingTenure: {}
-        },
-        governance: {
-          votingPower: 0,
-          activeProposals: [],
-          votingHistory: [],
-          submittedProposals: [],
-          governanceTokens: 0
-        },
-        economics: {
-          marketInfluence: 0,
-          industryPositions: {},
-          activeEvents: [],
-          resourceInventory: {},
-          supplyChainConnections: [],
-          economicReputation: 50
-        },
-        achievements: [],
-        statistics: {
-          totalDaysPlayed: 0,
-          totalMoneyEarned: 0,
-          businessesOwned: 0,
-          relationshipsFormed: 0,
-          jobsHeld: 0,
-          educationCompleted: [],
-        },
-        gameTime: {
-          currentDate: new Date(),
-          daysPassed: 0,
-          monthsPassed: 0,
-          yearsPassed: 0,
-        },
-      })),
-    }),
-    {
-      name: 'billionaire-empire-game',
-      version: 3, // Increment version for staking system
-    }
-  )
-);
-
-export default useGameStore;

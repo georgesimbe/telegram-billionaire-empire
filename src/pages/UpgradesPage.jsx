@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import useGameStore from '../store/gameStore';
+import useIntegratedGameStore from '../store/integratedGameStore';
 import UpgradeCard from '../components/UpgradeCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import NotificationToast from '../components/NotificationToast';
@@ -13,10 +13,10 @@ import {
 import { formatNumber } from '../utils/formatters';
 
 const UpgradesPage = () => {
-  const player = useGameStore(state => state.player);
-  const upgrades = useGameStore(state => state.upgrades || {});
-  const spendPoints = useGameStore(state => state.spendPoints);
-  const setUpgrades = useGameStore(state => state.setUpgrades);
+  const player = useIntegratedGameStore(state => state.player);
+  const upgrades = useIntegratedGameStore(state => state.upgrades || {});
+  const spendPoints = useIntegratedGameStore(state => state.spendPoints);
+  const setUpgrades = useIntegratedGameStore(state => state.setUpgrades);
 
   const [selectedCategory, setSelectedCategory] = useState('click');
   const [notifications, setNotifications] = useState([]);
