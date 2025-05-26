@@ -4,7 +4,7 @@ import {
   HOUSING_TYPES,
   getAvailableHousing,
   calculateMortgagePayment,
-  getHousingBonuses
+  getHousingEffects
 } from '../config/housingConfig';
 import {
   ACCOUNT_TYPES,
@@ -55,7 +55,7 @@ const SocialPage = () => {
   ];
 
   const currentHousing = HOUSING_TYPES[playerStats.currentHousing.toUpperCase()];
-  const housingBonuses = getHousingBonuses(currentHousing);
+  const housingBonuses = getHousingEffects(currentHousing);
   const relationshipEffects = calculateRelationshipEffects(playerStats.relationships);
   const creditScoreRange = getCreditScoreRange(playerStats.creditScore);
 
@@ -234,8 +234,8 @@ const SocialPage = () => {
           <div className="flex justify-between font-bold">
             <span className="text-white">Net Income</span>
             <span className={`${playerStats.monthlyIncome - currentHousing.monthlyCost -
-                playerStats.loans.reduce((sum, loan) => sum + loan.monthlyPayment, 0) -
-                (relationshipEffects.monthlyExpenses || 0) > 0 ? 'text-green-400' : 'text-red-400'
+              playerStats.loans.reduce((sum, loan) => sum + loan.monthlyPayment, 0) -
+              (relationshipEffects.monthlyExpenses || 0) > 0 ? 'text-green-400' : 'text-red-400'
               }`}>
               ${formatNumber(
                 playerStats.monthlyIncome - currentHousing.monthlyCost -
@@ -265,8 +265,8 @@ const SocialPage = () => {
                 <motion.div
                   key={key}
                   className={`bg-gray-700/50 rounded-xl p-4 border ${isCurrent ? 'border-green-500' :
-                      isAvailable ? 'border-gray-600 hover:border-blue-500' :
-                        'border-gray-700 opacity-50'
+                    isAvailable ? 'border-gray-600 hover:border-blue-500' :
+                      'border-gray-700 opacity-50'
                     } transition-colors cursor-pointer`}
                   whileHover={isAvailable ? { scale: 1.02 } : {}}
                   onClick={() => isAvailable && !isCurrent && setShowModal({ type: 'housing', item: housing })}
@@ -509,8 +509,8 @@ const SocialPage = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                ? 'text-white border-b-2 border-blue-500'
-                : 'text-gray-400 hover:text-white'
+              ? 'text-white border-b-2 border-blue-500'
+              : 'text-gray-400 hover:text-white'
               }`}
           >
             <span>{tab.icon}</span>

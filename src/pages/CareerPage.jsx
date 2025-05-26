@@ -254,8 +254,8 @@ const CareerPage = () => {
                 key={education.id}
                 whileHover={{ scale: 1.02 }}
                 className={`bg-gray-700 rounded-lg p-4 cursor-pointer border-2 transition-colors ${selectedEducation === education.id
-                    ? 'border-blue-500'
-                    : 'border-transparent hover:border-gray-600'
+                  ? 'border-blue-500'
+                  : 'border-transparent hover:border-gray-600'
                   } ${!canAfford ? 'opacity-50' : ''}`}
                 onClick={() => setSelectedEducation(education.id)}
               >
@@ -315,8 +315,8 @@ const CareerPage = () => {
                     }}
                     disabled={!canAfford || career.currentEducation}
                     className={`w-full py-2 rounded font-semibold transition-colors ${canAfford && !career.currentEducation
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       }`}
                   >
                     {!canAfford ? 'Insufficient Funds' :
@@ -384,8 +384,8 @@ const CareerPage = () => {
                 key={job.id}
                 whileHover={{ scale: 1.02 }}
                 className={`bg-gray-700 rounded-lg p-4 cursor-pointer border-2 transition-colors ${selectedJob === job.id
-                    ? 'border-blue-500'
-                    : 'border-transparent hover:border-gray-600'
+                  ? 'border-blue-500'
+                  : 'border-transparent hover:border-gray-600'
                   } ${isCurrentJob ? 'opacity-50' : ''}`}
                 onClick={() => setSelectedJob(job.id)}
               >
@@ -500,8 +500,8 @@ const CareerPage = () => {
                     onClick={() => improveSkill(skillId, 5)}
                     disabled={player.cash < 100}
                     className={`flex-1 py-2 rounded font-semibold transition-colors ${player.cash >= 100
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       }`}
                   >
                     Train (+5) - $100
@@ -510,8 +510,8 @@ const CareerPage = () => {
                     onClick={() => improveSkill(skillId, 15)}
                     disabled={player.cash < 500}
                     className={`flex-1 py-2 rounded font-semibold transition-colors ${player.cash >= 500
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       }`}
                   >
                     Course (+15) - $500
@@ -546,8 +546,8 @@ const CareerPage = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors whitespace-nowrap ${activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
                 }`}
             >
               <Icon className="h-4 w-4" />

@@ -24,6 +24,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory leaks in game loop
 - Race conditions in tap handling
 
+## [2.0.1] - 2025-01-20
+
+### 🔧 Critical Bug Fixes & Dependencies
+
+### Added
+
+- **ESLint Configuration**: Added `.eslintrc.json` with React-specific rules for better code quality
+- **Missing Dependencies**: Installed `@heroicons/react` package for icon components
+
+### Fixed
+
+- **Build System Issues**:
+  - ✅ Fixed missing `@heroicons/react` dependency causing build failures
+  - ✅ Resolved duplicate exports in `HintIcon.jsx` (GAME_HINTS and QuickHint)
+  - ✅ Fixed incorrect import statements for `useGameStore` (changed from named to default import)
+  - ✅ Corrected missing `getHousingEffects` function import in `SocialPage.jsx`
+
+- **Import/Export Issues**:
+  - Fixed `BusinessPage.jsx` and `DynastyPage.jsx` import statements
+  - Replaced non-existent `getHousingBonuses` with correct `getHousingEffects` function
+  - Removed duplicate symbol declarations causing compilation errors
+
+- **Code Quality**:
+  - Added ESLint configuration for consistent code formatting
+  - Improved error handling and type safety
+  - Enhanced development workflow with proper linting
+
+### Technical Improvements
+
+- **Build Process**: App now builds successfully without errors
+- **Development Server**: Confirmed running properly on port 5173
+- **Dependencies**: All required packages properly installed and configured
+- **Code Standards**: ESLint rules established for React best practices
+
+### Developer Experience
+
+- **Error Resolution**: Comprehensive fix of all build-blocking issues
+- **Documentation**: Updated with proper import/export patterns
+- **Tooling**: Enhanced development environment with linting support
+
+### Files Modified
+
+- `src/components/HintIcon.jsx` - Removed duplicate exports
+- `src/pages/BusinessPage.jsx` - Fixed useGameStore import
+- `src/pages/DynastyPage.jsx` - Fixed useGameStore import  
+- `src/pages/SocialPage.jsx` - Fixed getHousingEffects import
+- `.eslintrc.json` - Added ESLint configuration
+- `package.json` - Added @heroicons/react dependency
+
+### Verification
+
+- ✅ Build process completes successfully
+- ✅ Development server runs without errors
+- ✅ All imports resolve correctly
+- ✅ No duplicate symbol declarations
+- ✅ ESLint configuration working properly
+
 ## [2.0.0] - 2025-01-20
 
 ### 🎯 MAJOR TRANSFORMATION: Life Simulation Game

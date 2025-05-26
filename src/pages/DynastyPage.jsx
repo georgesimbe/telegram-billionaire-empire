@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGameStore } from '../store/gameStore';
+import useGameStore from '../store/gameStore';
 import {
   DYNASTY_TIERS,
   DYNASTY_TRAITS,
@@ -122,8 +122,8 @@ const DynastyPage = () => {
             <div
               key={focus.id}
               className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${dynasty.focus === focus.id
-                  ? 'border-purple-500 bg-purple-900/30'
-                  : 'border-gray-600 bg-gray-700 hover:border-purple-400'
+                ? 'border-purple-500 bg-purple-900/30'
+                : 'border-gray-600 bg-gray-700 hover:border-purple-400'
                 }`}
               onClick={() => setDynastyFocus(focus.id)}
             >
@@ -144,10 +144,10 @@ const DynastyPage = () => {
               <div
                 key={index}
                 className={`p-3 rounded-lg border-l-4 ${insight.priority === 'high'
-                    ? 'border-red-500 bg-red-900/20'
-                    : insight.priority === 'medium'
-                      ? 'border-yellow-500 bg-yellow-900/20'
-                      : 'border-blue-500 bg-blue-900/20'
+                  ? 'border-red-500 bg-red-900/20'
+                  : insight.priority === 'medium'
+                    ? 'border-yellow-500 bg-yellow-900/20'
+                    : 'border-blue-500 bg-blue-900/20'
                   }`}
               >
                 <p className="text-white">{insight.message}</p>
@@ -348,10 +348,10 @@ const DynastyPage = () => {
               <div
                 key={generation.id}
                 className={`p-4 rounded-lg border-2 ${isActive
-                    ? 'border-gold-500 bg-gold-900/30'
-                    : isUnlocked
-                      ? 'border-gray-500 bg-gray-700'
-                      : 'border-gray-700 bg-gray-800 opacity-50'
+                  ? 'border-gold-500 bg-gold-900/30'
+                  : isUnlocked
+                    ? 'border-gray-500 bg-gray-700'
+                    : 'border-gray-700 bg-gray-800 opacity-50'
                   }`}
               >
                 <div className="text-center mb-3">
@@ -406,8 +406,8 @@ const DynastyPage = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-6 py-3 rounded-lg font-bold transition-all ${activeTab === tab.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
             >
               {tab.icon} {tab.label}

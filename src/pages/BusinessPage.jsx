@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useGameStore } from '../store/gameStore';
+import useGameStore from '../store/gameStore';
 import { EXPANDED_INDUSTRIES_CONFIG, INDUSTRY_SECTORS, calculateBusinessCost, calculateBusinessIncome, getUnlockedBusinesses, getBusinessesBySector, calculateSupplyChainBonus } from '../config/expandedIndustriesConfig';
 import HintIcon, { QuickHint, GAME_HINTS } from '../components/HintIcon';
 import { formatNumber } from '../utils/formatters';
@@ -161,8 +161,8 @@ const BusinessPage = () => {
             <button
               onClick={() => setSelectedSector('all')}
               className={`px-3 py-1 rounded-full text-sm transition-colors ${selectedSector === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
             >
               All Industries
@@ -172,8 +172,8 @@ const BusinessPage = () => {
                 key={sectorName}
                 onClick={() => setSelectedSector(sectorName)}
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${selectedSector === sectorName
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   }`}
               >
                 {sectorData.icon} {sectorName}
@@ -269,8 +269,8 @@ const BusinessPage = () => {
                                 <span
                                   key={req}
                                   className={`text-xs px-2 py-1 rounded ${hasSupplier
-                                      ? 'bg-green-900 text-green-300'
-                                      : 'bg-red-900 text-red-300'
+                                    ? 'bg-green-900 text-green-300'
+                                    : 'bg-red-900 text-red-300'
                                     }`}
                                 >
                                   {supplierConfig?.icon} {supplierConfig?.name || req}
@@ -288,8 +288,8 @@ const BusinessPage = () => {
                             onClick={() => purchaseBusiness(business)}
                             disabled={!canAfford}
                             className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${canAfford
-                                ? 'bg-green-600 hover:bg-green-700 text-white'
-                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                              ? 'bg-green-600 hover:bg-green-700 text-white'
+                              : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                               }`}
                           >
                             {canAfford ? 'Purchase' : 'Insufficient Funds'}
@@ -306,8 +306,8 @@ const BusinessPage = () => {
                               onClick={() => upgradeBusiness(business.id)}
                               disabled={!canAfford}
                               className={`w-full py-1 px-4 rounded-lg text-sm transition-colors ${canAfford
-                                  ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-                                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                                 }`}
                             >
                               Upgrade (${formatNumber(cost)})
@@ -423,8 +423,8 @@ const BusinessPage = () => {
                       <h4 className="text-white font-semibold">{config.name}</h4>
                     </div>
                     <span className={`px-2 py-1 rounded text-sm ${supplyChainBonus > 0.2 ? 'bg-green-900 text-green-300' :
-                        supplyChainBonus > 0 ? 'bg-yellow-900 text-yellow-300' :
-                          'bg-red-900 text-red-300'
+                      supplyChainBonus > 0 ? 'bg-yellow-900 text-yellow-300' :
+                        'bg-red-900 text-red-300'
                       }`}>
                       {supplyChainBonus > 0 ? `+${(supplyChainBonus * 100).toFixed(1)}%` : 'No Bonus'}
                     </span>
@@ -441,8 +441,8 @@ const BusinessPage = () => {
                           <div
                             key={req}
                             className={`p-2 rounded text-sm ${hasSupplier
-                                ? 'bg-green-900 text-green-300'
-                                : 'bg-gray-600 text-gray-300'
+                              ? 'bg-green-900 text-green-300'
+                              : 'bg-gray-600 text-gray-300'
                               }`}
                           >
                             <span className="mr-1">{supplierConfig?.icon}</span>
@@ -483,8 +483,8 @@ const BusinessPage = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
               }`}
           >
             <span>{tab.icon}</span>
