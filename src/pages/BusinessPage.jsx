@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGameStore } from '../store/gameStore';
-import { INDUSTRIES_CONFIG, calculateBusinessCost, calculateBusinessIncome, getUnlockedBusinesses } from '../config/industriesConfig';
+import { EXPANDED_INDUSTRIES_CONFIG, INDUSTRY_SECTORS, calculateBusinessCost, calculateBusinessIncome, getUnlockedBusinesses, getBusinessesBySector, calculateSupplyChainBonus } from '../config/expandedIndustriesConfig';
+import HintIcon, { QuickHint, GAME_HINTS } from '../components/HintIcon';
 import { formatNumber } from '../utils/formatters';
 import UpgradeModal from '../components/UpgradeModal';
 import { BUSINESS_CONFIG } from '../config/businessConfig';
@@ -38,8 +39,10 @@ const BusinessPage = () => {
     addIncome
   } = useGameStore();
 
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('marketplace');
+  const [selectedSector, setSelectedSector] = useState('all');
   const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [resourcePrices, setResourcePrices] = useState({});
   const [activeEvent, setActiveEvent] = useState(null);
   const [supplyChainData, setSupplyChainData] = useState({});
@@ -84,241 +87,370 @@ const BusinessPage = () => {
     return () => clearInterval(interval);
   }, [businesses, player.cash, activeEvent]);
 
-  const handleBusinessClick = (business) => {
-    setSelectedBusiness(business);
-  };
-
-  const handleUpgrade = () => {
-    if (!selectedBusiness) return;
-
-    const actionResult = logAction('BUSINESS_PURCHASE', {
-      businessId: selectedBusiness.id
-    });
-
-    if (!actionResult.allowed) {
-      alert(actionResult.reason);
-      return;
-    }
-
-    const success = buyBusiness(selectedBusiness.id);
-    if (success) {
-      // Success feedback handled by modal close
-    } else {
-      alert('Not enough points to purchase this business');
-    }
-  };
-
   const unlockedBusinesses = getUnlockedBusinesses(player.level);
-  const currentLevel = selectedBusiness ? (businesses[selectedBusiness.id] || 0) : 0;
-  const upgradeCost = selectedBusiness ? calculateBusinessCost(selectedBusiness, currentLevel) : 0;
-  const canAfford = player.points >= upgradeCost;
+  const ownedBusinesses = businesses || [];
 
-  const purchaseBusiness = (businessType) => {
-    const config = BUSINESS_CONFIG[businessType];
-    if (!config) return;
+  const purchaseBusiness = (businessConfig) => {
+    const cost = calculateBusinessCost(businessConfig, 0);
 
-    const cost = config.baseCost;
     if (player.cash >= cost) {
       spendMoney(cost);
       addBusiness({
-        type: businessType,
-        name: config.name,
+        id: businessConfig.id,
+        type: businessConfig.id,
+        name: businessConfig.name,
         level: 1,
-        income: config.baseIncome,
+        income: businessConfig.baseIncome,
         cost: cost,
-        staff: [],
-        resources: {},
-        efficiency: 1.0,
-        lastUpdate: Date.now()
+        sector: businessConfig.sector,
+        lastCollected: Date.now(),
+        supplyChain: businessConfig.supplyChain
       });
+    } else {
+      alert('Not enough cash to purchase this business!');
     }
   };
 
-  const hireStaff = (businessId, staffType) => {
-    const business = businesses.find(b => b.id === businessId);
-    const staffConfig = ENHANCED_STAFF_TYPES[staffType];
+  const upgradeBusiness = (businessId) => {
+    const business = ownedBusinesses.find(b => b.id === businessId);
+    const businessConfig = EXPANDED_INDUSTRIES_CONFIG[businessId];
 
-    if (!business || !staffConfig || player.cash < staffConfig.baseCost) return;
+    if (!business || !businessConfig) return;
 
-    spendMoney(staffConfig.baseCost);
+    const upgradeCost = calculateBusinessCost(businessConfig, business.level);
 
-    const newStaff = {
-      id: Date.now(),
-      type: staffType,
-      level: 1,
-      experience: 0,
-      morale: staffConfig.baseMorale * 100,
-      salary: staffConfig.baseCost * 0.1, // 10% of hire cost as monthly salary
-      skills: [...staffConfig.skills],
-      hireDate: Date.now()
-    };
-
-    const updatedStaff = [...(business.staff || []), newStaff];
-    updateBusiness(businessId, { staff: updatedStaff });
-  };
-
-  const handleNewsEvent = (eventId, choiceId) => {
-    const event = ADVANCED_NEWS_EVENTS[eventId];
-    if (!event) return;
-
-    const result = processEventChoice(event, choiceId, {
-      businesses,
-      points: player.cash
-    });
-
-    if (result && result.requirements_met) {
-      if (result.costs > 0) {
-        spendMoney(result.costs);
-      }
-
-      // Apply effects to businesses
-      businesses.forEach(business => {
-        if (event.affectedIndustries.includes(business.category)) {
-          const effects = result.effects;
-          const updates = {};
-
-          if (effects.incomeMultiplier) {
-            updates.income = business.income * effects.incomeMultiplier;
-          }
-          if (effects.efficiencyBonus) {
-            updates.efficiency = (business.efficiency || 1) * (1 + effects.efficiencyBonus);
-          }
-
-          if (Object.keys(updates).length > 0) {
-            updateBusiness(business.id, updates);
-          }
-        }
+    if (player.cash >= upgradeCost) {
+      spendMoney(upgradeCost);
+      updateBusiness(businessId, {
+        level: business.level + 1,
+        income: calculateBusinessIncome(businessConfig, business.level + 1)
       });
-
-      setActiveEvent(null);
+    } else {
+      alert('Not enough cash to upgrade this business!');
     }
   };
 
-  const renderOverview = () => (
-    <div className="space-y-6">
-      {/* Business Portfolio Summary */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Business Portfolio</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-900/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-blue-400">{businesses.length}</div>
-            <div className="text-sm text-gray-300">Total Businesses</div>
-          </div>
-          <div className="bg-green-900/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-green-400">
-              ${businesses.reduce((sum, b) => sum + (b.income || 0), 0).toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-300">Monthly Income</div>
-          </div>
-          <div className="bg-purple-900/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-purple-400">
-              {businesses.reduce((sum, b) => sum + (b.staff?.length || 0), 0)}
-            </div>
-            <div className="text-sm text-gray-300">Total Staff</div>
-          </div>
-          <div className="bg-yellow-900/30 rounded-lg p-4">
-            <div className="text-2xl font-bold text-yellow-400">
-              {((supplyChainData.totalEfficiency || 1) * 100).toFixed(1)}%
-            </div>
-            <div className="text-sm text-gray-300">Avg Efficiency</div>
-          </div>
-        </div>
-      </div>
+  const collectIncome = (businessId) => {
+    const business = ownedBusinesses.find(b => b.id === businessId);
+    const businessConfig = EXPANDED_INDUSTRIES_CONFIG[businessId];
 
-      {/* Supply Chain Dashboard */}
-      {supplyChainData.bottlenecks && supplyChainData.bottlenecks.length > 0 && (
-        <div className="bg-red-900/20 border border-red-500 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-4">Supply Chain Alerts</h3>
-          <div className="space-y-3">
-            {supplyChainData.bottlenecks.map((bottleneck, index) => (
-              <div key={index} className="bg-red-900/30 rounded-lg p-3">
-                <div className="font-bold text-white">{bottleneck.business}</div>
-                <div className="text-sm text-red-300">
-                  Efficiency: {(bottleneck.efficiency * 100).toFixed(1)}%
-                </div>
-                <div className="text-xs text-gray-400">
-                  Missing: {bottleneck.missingResources.map(r => r.resource).join(', ')}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+    if (!business || !businessConfig) return;
 
-      {/* Active News Event */}
-      {activeEvent && (
-        <div className="bg-orange-900/20 border border-orange-500 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-orange-400 mb-4">Breaking News</h3>
-          <div className="mb-4">
-            <h4 className="font-bold text-white text-lg">{activeEvent.name}</h4>
-            <p className="text-gray-300 mt-2">{activeEvent.description}</p>
+    const supplyChainBonus = calculateSupplyChainBonus(ownedBusinesses, businessConfig);
+    const income = calculateBusinessIncome(businessConfig, business.level, supplyChainBonus);
+
+    addIncome(income);
+    updateBusiness(businessId, { lastCollected: Date.now() });
+  };
+
+  const renderMarketplace = () => {
+    const sectors = selectedSector === 'all'
+      ? Object.keys(INDUSTRY_SECTORS)
+      : [selectedSector];
+
+    return (
+      <div className="space-y-6">
+        {/* Sector Filter */}
+        <div className="bg-gray-800 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">Business Marketplace</h3>
+            <QuickHint hintKey="BUSINESS_UPGRADE" />
           </div>
 
-          <div className="space-y-3">
-            {activeEvent.choices.map(choice => (
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedSector('all')}
+              className={`px-3 py-1 rounded-full text-sm transition-colors ${selectedSector === 'all'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+            >
+              All Industries
+            </button>
+            {Object.entries(INDUSTRY_SECTORS).map(([sectorName, sectorData]) => (
               <button
-                key={choice.id}
-                onClick={() => handleNewsEvent(activeEvent.id, choice.id)}
-                disabled={choice.requirements && player.cash < (choice.requirements.points || 0)}
-                className="w-full text-left p-4 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-50 rounded-lg transition-colors"
+                key={sectorName}
+                onClick={() => setSelectedSector(sectorName)}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${selectedSector === sectorName
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
               >
-                <div className="font-bold text-white">{choice.text}</div>
-                {choice.cost > 0 && (
-                  <div className="text-sm text-yellow-400 mt-1">
-                    Cost: ${choice.cost.toLocaleString()}
-                  </div>
-                )}
+                {sectorData.icon} {sectorName}
               </button>
             ))}
           </div>
         </div>
-      )}
 
-      {/* Business List */}
+        {/* Business Grid */}
+        {sectors.map(sectorName => {
+          const sectorBusinesses = getBusinessesBySector(sectorName).filter(
+            business => business.unlockLevel <= player.level
+          );
+
+          if (sectorBusinesses.length === 0) return null;
+
+          return (
+            <div key={sectorName} className="bg-gray-800 rounded-lg p-6">
+              <div className="flex items-center mb-4">
+                <span className="text-2xl mr-3">{INDUSTRY_SECTORS[sectorName].icon}</span>
+                <div>
+                  <h3 className="text-xl font-bold text-white">{sectorName}</h3>
+                  <p className="text-gray-400 text-sm">{INDUSTRY_SECTORS[sectorName].description}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {sectorBusinesses.map(business => {
+                  const owned = ownedBusinesses.find(b => b.id === business.id);
+                  const cost = calculateBusinessCost(business, owned?.level || 0);
+                  const income = calculateBusinessIncome(business, owned?.level || 1);
+                  const supplyChainBonus = calculateSupplyChainBonus(ownedBusinesses, business);
+                  const canAfford = player.cash >= cost;
+
+                  return (
+                    <motion.div
+                      key={business.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-gray-700 rounded-lg p-4 border border-gray-600"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center">
+                          <span className="text-2xl mr-3">{business.icon}</span>
+                          <div>
+                            <h4 className="text-white font-semibold">{business.name}</h4>
+                            <p className="text-gray-400 text-xs">{business.description}</p>
+                          </div>
+                        </div>
+                        <HintIcon
+                          hint={`${business.description}. Unlock level: ${business.unlockLevel}`}
+                          title={business.name}
+                          type="info"
+                          size="sm"
+                        />
+                      </div>
+
+                      {/* Business Stats */}
+                      <div className="space-y-2 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-400">Cost:</span>
+                          <span className="text-white">${formatNumber(cost)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-400">Income:</span>
+                          <span className="text-green-400">${formatNumber(income)}/min</span>
+                        </div>
+                        {owned && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-400">Level:</span>
+                            <span className="text-blue-400">{owned.level}</span>
+                          </div>
+                        )}
+                        {supplyChainBonus > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-400">Supply Bonus:</span>
+                            <span className="text-yellow-400">+{(supplyChainBonus * 100).toFixed(1)}%</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Supply Chain Requirements */}
+                      {business.supplyChain?.requires?.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex items-center mb-2">
+                            <span className="text-gray-400 text-xs">Supply Chain:</span>
+                            <QuickHint hintKey="SUPPLY_CHAIN" size="xs" className="ml-1" />
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {business.supplyChain.requires.map(req => {
+                              const hasSupplier = ownedBusinesses.some(b => b.id === req);
+                              const supplierConfig = EXPANDED_INDUSTRIES_CONFIG[req];
+                              return (
+                                <span
+                                  key={req}
+                                  className={`text-xs px-2 py-1 rounded ${hasSupplier
+                                      ? 'bg-green-900 text-green-300'
+                                      : 'bg-red-900 text-red-300'
+                                    }`}
+                                >
+                                  {supplierConfig?.icon} {supplierConfig?.name || req}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="space-y-2">
+                        {!owned ? (
+                          <button
+                            onClick={() => purchaseBusiness(business)}
+                            disabled={!canAfford}
+                            className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${canAfford
+                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                              }`}
+                          >
+                            {canAfford ? 'Purchase' : 'Insufficient Funds'}
+                          </button>
+                        ) : (
+                          <div className="space-y-2">
+                            <button
+                              onClick={() => collectIncome(business.id)}
+                              className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+                            >
+                              Collect Income
+                            </button>
+                            <button
+                              onClick={() => upgradeBusiness(business.id)}
+                              disabled={!canAfford}
+                              className={`w-full py-1 px-4 rounded-lg text-sm transition-colors ${canAfford
+                                  ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                }`}
+                            >
+                              Upgrade (${formatNumber(cost)})
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderPortfolio = () => (
+    <div className="space-y-6">
       <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Your Businesses</h3>
-        {businesses.length === 0 ? (
-          <p className="text-gray-400">No businesses owned yet. Purchase your first business below!</p>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white">Your Business Portfolio</h3>
+          <QuickHint hintKey="BUSINESS_ROI" />
+        </div>
+
+        {ownedBusinesses.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-400 mb-4">You don't own any businesses yet.</p>
+            <button
+              onClick={() => setActiveTab('marketplace')}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            >
+              Browse Marketplace
+            </button>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {businesses.map(business => {
-              const config = BUSINESS_CONFIG[business.type];
-              const efficiency = calculateSupplyChainEfficiency(business, {});
-              const teamSynergy = calculateTeamSynergy(business.staff || []);
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {ownedBusinesses.map(business => {
+              const config = EXPANDED_INDUSTRIES_CONFIG[business.id];
+              if (!config) return null;
+
+              const supplyChainBonus = calculateSupplyChainBonus(ownedBusinesses, config);
+              const income = calculateBusinessIncome(config, business.level, supplyChainBonus);
 
               return (
-                <div
-                  key={business.id}
-                  className="bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-600 transition-colors"
-                  onClick={() => setSelectedBusiness(business)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-bold text-white">{business.name}</h4>
-                    <span className="text-2xl">{config?.icon}</span>
+                <div key={business.id} className="bg-gray-700 rounded-lg p-4">
+                  <div className="flex items-center mb-3">
+                    <span className="text-2xl mr-3">{config.icon}</span>
+                    <div>
+                      <h4 className="text-white font-semibold">{config.name}</h4>
+                      <p className="text-gray-400 text-sm">Level {business.level}</p>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Level:</span>
-                      <span className="text-white">{business.level}</span>
+                      <span className="text-gray-400">Income:</span>
+                      <span className="text-green-400">${formatNumber(income)}/min</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Monthly Income:</span>
-                      <span className="text-green-400">${business.income?.toLocaleString()}</span>
+                      <span className="text-gray-400">Sector:</span>
+                      <span className="text-blue-400">{config.sector}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Staff:</span>
-                      <span className="text-white">{business.staff?.length || 0}</span>
+                    {supplyChainBonus > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-400">Supply Bonus:</span>
+                        <span className="text-yellow-400">+{(supplyChainBonus * 100).toFixed(1)}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => collectIncome(business.id)}
+                    className="w-full mt-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  >
+                    Collect Income
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSupplyChain = () => (
+    <div className="space-y-6">
+      <div className="bg-gray-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white">Supply Chain Analysis</h3>
+          <QuickHint hintKey="SUPPLY_CHAIN" />
+        </div>
+
+        {ownedBusinesses.length === 0 ? (
+          <p className="text-gray-400 text-center py-8">
+            Purchase businesses to see supply chain analysis
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {ownedBusinesses.map(business => {
+              const config = EXPANDED_INDUSTRIES_CONFIG[business.id];
+              if (!config?.supplyChain?.requires) return null;
+
+              const supplyChainBonus = calculateSupplyChainBonus(ownedBusinesses, config);
+
+              return (
+                <div key={business.id} className="bg-gray-700 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center">
+                      <span className="text-xl mr-2">{config.icon}</span>
+                      <h4 className="text-white font-semibold">{config.name}</h4>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Efficiency:</span>
-                      <span className={`${efficiency >= 0.8 ? 'text-green-400' : efficiency >= 0.6 ? 'text-yellow-400' : 'text-red-400'}`}>
-                        {(efficiency * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Team Synergy:</span>
-                      <span className="text-blue-400">{(teamSynergy * 100).toFixed(1)}%</span>
+                    <span className={`px-2 py-1 rounded text-sm ${supplyChainBonus > 0.2 ? 'bg-green-900 text-green-300' :
+                        supplyChainBonus > 0 ? 'bg-yellow-900 text-yellow-300' :
+                          'bg-red-900 text-red-300'
+                      }`}>
+                      {supplyChainBonus > 0 ? `+${(supplyChainBonus * 100).toFixed(1)}%` : 'No Bonus'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-gray-400 text-sm">Required Suppliers:</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {config.supplyChain.requires.map(req => {
+                        const hasSupplier = ownedBusinesses.some(b => b.id === req);
+                        const supplierConfig = EXPANDED_INDUSTRIES_CONFIG[req];
+
+                        return (
+                          <div
+                            key={req}
+                            className={`p-2 rounded text-sm ${hasSupplier
+                                ? 'bg-green-900 text-green-300'
+                                : 'bg-gray-600 text-gray-300'
+                              }`}
+                          >
+                            <span className="mr-1">{supplierConfig?.icon}</span>
+                            {supplierConfig?.name || req}
+                            {hasSupplier && <span className="ml-1">✓</span>}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -330,251 +462,48 @@ const BusinessPage = () => {
     </div>
   );
 
-  const renderMarketplace = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Available Businesses</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(BUSINESS_CONFIG).map(([type, config]) => (
-            <div key={type} className="bg-gray-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-bold text-white">{config.name}</h4>
-                <span className="text-3xl">{config.icon}</span>
-              </div>
-
-              <p className="text-sm text-gray-300 mb-4">{config.description}</p>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Cost:</span>
-                  <span className="text-white">${config.baseCost.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Monthly Income:</span>
-                  <span className="text-green-400">${config.baseIncome.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Category:</span>
-                  <span className="text-white">{config.category}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => purchaseBusiness(type)}
-                disabled={player.cash < config.baseCost}
-                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-              >
-                Purchase
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderResources = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Resource Market</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(RESOURCE_TYPES).map(([resourceId, resource]) => {
-            const currentPrice = resourcePrices[resourceId] || resource.basePrice;
-            const priceChange = ((currentPrice - resource.basePrice) / resource.basePrice) * 100;
-
-            return (
-              <div key={resourceId} className="bg-gray-700 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">{resource.icon}</span>
-                    <h4 className="font-bold text-white">{resource.name}</h4>
-                  </div>
-                </div>
-
-                <p className="text-sm text-gray-300 mb-3">{resource.description}</p>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Current Price:</span>
-                    <span className="text-white">${currentPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Price Change:</span>
-                    <span className={priceChange >= 0 ? 'text-green-400' : 'text-red-400'}>
-                      {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Category:</span>
-                    <span className="text-white capitalize">{resource.category.replace('_', ' ')}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderStaffManagement = () => (
-    <div className="space-y-6">
-      {selectedBusiness ? (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-white">
-              Staff Management - {selectedBusiness.name}
-            </h3>
-            <button
-              onClick={() => setSelectedBusiness(null)}
-              className="text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Current Staff */}
-          <div className="mb-6">
-            <h4 className="text-lg font-bold text-white mb-3">Current Staff</h4>
-            {selectedBusiness.staff && selectedBusiness.staff.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {selectedBusiness.staff.map(staff => {
-                  const staffConfig = ENHANCED_STAFF_TYPES[staff.type.toUpperCase()];
-                  const productivity = calculateStaffProductivity(staff);
-                  const morale = calculateStaffMorale(staff, selectedBusiness);
-
-                  return (
-                    <div key={staff.id} className="bg-gray-700 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-2xl">{staffConfig?.icon}</span>
-                        <div>
-                          <h5 className="font-bold text-white">{staffConfig?.name}</h5>
-                          <div className="text-sm text-gray-400">Level {staff.level}</div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Productivity:</span>
-                          <span className="text-green-400">{(productivity * 100).toFixed(1)}%</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Morale:</span>
-                          <span className={morale >= 80 ? 'text-green-400' : morale >= 60 ? 'text-yellow-400' : 'text-red-400'}>
-                            {morale.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Experience:</span>
-                          <span className="text-white">{staff.experience || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-gray-400">No staff hired yet.</p>
-            )}
-          </div>
-
-          {/* Hire New Staff */}
-          <div>
-            <h4 className="text-lg font-bold text-white mb-3">Hire New Staff</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(ENHANCED_STAFF_TYPES).map(([type, config]) => (
-                <div key={type} className="bg-gray-700 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">{config.icon}</span>
-                    <h5 className="font-bold text-white">{config.name}</h5>
-                  </div>
-
-                  <p className="text-sm text-gray-300 mb-3">{config.description}</p>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Cost:</span>
-                      <span className="text-white">${config.baseCost.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Productivity:</span>
-                      <span className="text-green-400">{(config.baseProductivity * 100).toFixed(0)}%</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => hireStaff(selectedBusiness.id, type)}
-                    disabled={player.cash < config.baseCost}
-                    className="w-full py-2 px-4 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                  >
-                    Hire
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-bold text-white mb-4">Staff Management</h3>
-          <p className="text-gray-400 mb-4">Select a business to manage its staff.</p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {businesses.map(business => (
-              <button
-                key={business.id}
-                onClick={() => setSelectedBusiness(business)}
-                className="text-left p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-              >
-                <h4 className="font-bold text-white">{business.name}</h4>
-                <div className="text-sm text-gray-400 mt-1">
-                  Staff: {business.staff?.length || 0}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Business Empire</h1>
-          <p className="text-blue-200">Build and manage your business portfolio</p>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {[
-            { id: 'overview', label: 'Overview', icon: '📊' },
-            { id: 'marketplace', label: 'Marketplace', icon: '🏪' },
-            { id: 'resources', label: 'Resources', icon: '📦' },
-            { id: 'staff', label: 'Staff', icon: '👥' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-lg font-bold transition-all ${activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        <div className="mb-8">
-          {activeTab === 'overview' && renderOverview()}
-          {activeTab === 'marketplace' && renderMarketplace()}
-          {activeTab === 'resources' && renderResources()}
-          {activeTab === 'staff' && renderStaffManagement()}
+    <div className="p-4 max-w-7xl mx-auto pb-20">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-white">Business Empire</h1>
+        <div className="flex items-center space-x-2">
+          <span className="text-gray-400">Cash:</span>
+          <span className="text-green-400 font-bold">${formatNumber(player.cash)}</span>
         </div>
       </div>
+
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 mb-6 bg-gray-800 p-1 rounded-lg">
+        {[
+          { id: 'marketplace', name: 'Marketplace', icon: '🏪' },
+          { id: 'portfolio', name: 'Portfolio', icon: '📊' },
+          { id: 'supply-chain', name: 'Supply Chain', icon: '🔗' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${activeTab === tab.id
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {activeTab === 'marketplace' && renderMarketplace()}
+        {activeTab === 'portfolio' && renderPortfolio()}
+        {activeTab === 'supply-chain' && renderSupplyChain()}
+      </motion.div>
     </div>
   );
 };

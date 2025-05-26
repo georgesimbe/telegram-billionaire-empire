@@ -1,23 +1,94 @@
-# 🏆 Telegram Billionaire Empire
+# 🏆 Telegram Billionaire Empire - Economic Staking Simulation
 
-A sophisticated Telegram Mini App that combines comprehensive life simulation mechanics with real TON blockchain integration. Build your life from the ground up - get a job, find housing, manage relationships, and grow your business empire!
+A sophisticated Telegram Mini App that combines comprehensive life simulation with real economic dynamics and TON blockchain integration. Build your life, create business empires, stake tokens, and participate in community governance while earning real TON cryptocurrency!
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Telegram-blue.svg)
 ![Blockchain](https://img.shields.io/badge/blockchain-TON-orange.svg)
 
 ## 🎮 Game Overview
 
-Telegram Billionaire Empire is a comprehensive life simulation game where players:
+Telegram Billionaire Empire is a comprehensive economic simulation where players experience real market dynamics while building their business empires:
 
-- **🏠 Life Management**: Start from nothing and build your life with housing, career, and relationships
-- **💼 Career Development**: Find jobs, get education, develop skills, and climb the career ladder
-- **🏦 Financial Management**: Manage bank accounts, apply for loans, build credit, and make investments
-- **👥 Social Life**: Build relationships with family, friends, and romantic partners
-- **🏢 Business Empire**: Start and manage multiple businesses across various industries
-- **👑 Dynasty Building**: Plan for multiple generations and build a lasting legacy
-- **💰 Earn TON**: Convert in-game achievements to real TON cryptocurrency
+### 🌟 **Core Systems**
+
+- **🏠 Life Management**: Complete life simulation with housing, career, education, banking, and relationships
+- **🏢 Business Empire**: 15+ interconnected business types with supply chain dependencies
+- **💰 Economic Staking**: 5 strategic TON staking pools with real yields (8-25% APY)
+- **🗳️ Community Governance**: Decentralized decision-making through staking-based voting power
+- **🌍 Market Dynamics**: Real economic simulation with inflation, supply/demand, and market events
+- **🎯 Play-to-Earn**: Multiple ways to earn TON through gameplay and community participation
+
+### 🚀 **Unique Features**
+
+- **Real Economic Impact**: Your business decisions affect market prices for all players
+- **Interconnected Systems**: Restaurants need farmers, tech companies need manufacturers
+- **Economic Classes**: Progress from Working Class to Ultra Rich with different opportunities
+- **Industry Clusters**: Geographic synergies when players cluster in same industries
+- **Economic Events**: Market crashes, innovation booms, and infrastructure crises
+- **Community Ownership**: Players literally own and govern the game through staking
+
+## 🏗️ **Economic Staking Pools**
+
+### 💰 **Five Strategic Investment Options**
+
+| Pool | APY | Lock Period | Risk | Benefits |
+|------|-----|-------------|------|----------|
+| 🏦 **Economic Stability** | 12% | 30 days | Low | Market stability, governance tokens |
+| 🚀 **Innovation Fund** | 18% | 90 days | Medium | Early access to new features, tech bonuses |
+| 🏗️ **Infrastructure Dev** | 10% | 60 days | Low | Crisis protection, infrastructure bonuses |
+| 📈 **Market Maker** | 25%* | 7 days | High | Trading fee share, flexible liquidity |
+| 🌍 **Social Impact** | 8% | 180 days | Very Low | Community project funding, ESG bonuses |
+
+*Variable APY based on trading activity
+
+### 🎯 **Staking Benefits**
+
+- **Passive TON Income**: Earn real cryptocurrency while you sleep
+- **Governance Power**: Voting rights based on staked amount + tenure
+- **Economic Protection**: Stakers get 50% protection during market crashes
+- **Exclusive Access**: Early access to new features and investment opportunities
+- **Community Projects**: Fund research centers, infrastructure, and education initiatives
+
+## 🌍 **Economic Simulation Features**
+
+### 📊 **Market Dynamics**
+- **Real-time Pricing**: Business values fluctuate based on supply and demand
+- **Inflation System**: 2% base monthly inflation, reduced by community staking participation
+- **Supply Shortages**: Resource scarcity affects all interconnected businesses
+- **Economic Events**: Market crashes, innovation booms, regulatory changes
+
+### 🏭 **Supply Chain Integration**
+- **Business Dependencies**: Restaurants require farmers, tech companies need manufacturers
+- **Resource Trading**: Buy and sell materials with other players
+- **Industry Clusters**: Geographic synergies when businesses concentrate
+- **Knowledge Sharing**: Research benefits spread across industry participants
+
+### 🏛️ **Political & Economic Influence**
+- **Economic Classes**: 5 tiers from Working Class to Ultra Rich
+- **Political Power**: Influence based on wealth, staking, and achievements
+- **Policy Impact**: High-net-worth players can influence economic policies
+- **Voting Weight**: Governance power scales with economic contribution
+
+## 🎮 **Play-to-Earn Mechanics**
+
+### 💰 **Daily Rewards**
+- **Business Owners**: 0.005-0.05 TON daily based on portfolio size
+- **Staking Tiers**: Additional rewards for active stakers
+- **Login Streaks**: Cumulative bonuses for consistent play
+
+### 🏆 **Achievement Rewards**
+- **First Business**: 0.1 TON
+- **Millionaire Status**: 1.0 TON
+- **Business Empire**: 5.0 TON (10+ businesses)
+- **Staking Veteran**: 2.0 TON (100+ days staked)
+- **Community Leader**: 3.0 TON (10+ proposals submitted)
+
+### 🗳️ **Governance Participation**
+- **Voting Rewards**: 0.1 TON per governance vote cast
+- **Proposal Submission**: Rewards for accepted community proposals
+- **Committee Participation**: Additional compensation for governance roles
 
 ## 🚀 Quick Start
 
@@ -25,332 +96,329 @@ Telegram Billionaire Empire is a comprehensive life simulation game where player
 
 - Node.js 18+ and npm
 - Supabase account
-- Telegram Bot Token (for production)
-- TON Wallet (for blockchain features)
+- Telegram Bot Token
+- TON Wallet for staking
 
 ### Installation
 
 1. **Clone the repository**
-
    ```bash
    git clone https://github.com/yourusername/telegram-billionaire-sim.git
    cd telegram-billionaire-sim
    ```
 
 2. **Install dependencies**
-
    ```bash
-   # Frontend dependencies
    npm install
-   
-   # Backend dependencies
    cd server && npm install && cd ..
    ```
 
-3. **Set up environment variables**
-
+3. **Environment setup**
    ```bash
-   # Copy environment templates
    cp server/env.example server/.env
-   
-   # Edit server/.env with your credentials:
-   # - SUPABASE_URL
-   # - SUPABASE_ANON_KEY
-   # - SUPABASE_SERVICE_ROLE_KEY
+   # Configure your Supabase, TON, and Telegram credentials
    ```
 
-4. **Set up database**
-
+4. **Database setup**
    ```bash
-   # Link to your Supabase project
    supabase link --project-ref YOUR_PROJECT_ID
-   
-   # Apply database schema
    supabase db push --linked
    ```
 
-5. **Start development servers**
-
+5. **Start development**
    ```bash
-   # Start backend (port 3000)
+   # Backend (port 3000)
    cd server && npm run dev &
    
-   # Start frontend (port 5173)
+   # Frontend (port 5173)
    npm run dev
    ```
 
 6. **Access the application**
-   - Frontend: <http://localhost:5173>
-   - Backend API: <http://localhost:3000>
-   - Health Check: <http://localhost:3000/health>
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:3000
+   - Health Check: http://localhost:3000/health
 
 ## 🏗️ Architecture
 
-### Frontend (React + Vite)
+### 📱 **Frontend (React + Vite)**
 
 ```
 src/
-├── components/          # Reusable UI components
-│   ├── EnhancedPointsDisplay.jsx
-│   ├── ParticleBackground.jsx
-│   ├── TapButton.jsx
-│   └── ...
-├── pages/              # Main application pages
-│   ├── HomePage.jsx    # Life dashboard
-│   ├── CareerPage.jsx  # Job and education management
-│   ├── BusinessPage.jsx # Business empire management
-│   ├── SocialPage.jsx  # Housing, banking, relationships
-│   └── DynastyPage.jsx # Multi-generational planning
-├── store/              # Zustand state management
-├── config/             # Game configuration systems
-│   ├── housingConfig.js
-│   ├── bankingConfig.js
-│   ├── jobsConfig.js
-│   ├── businessConfig.js
-│   └── ...
-├── services/           # API communication
-├── utils/              # Helper functions
-└── styles/             # CSS and styling
+├── components/              # UI components
+│   ├── EconomicDashboard.jsx   # Real-time economic indicators
+│   ├── StakingInterface.jsx    # Staking pool management
+│   ├── GovernancePanel.jsx     # Voting and proposals
+│   └── BusinessCard.jsx        # Business management
+├── pages/                   # Main application pages
+│   ├── HomePage.jsx            # Life dashboard
+│   ├── BusinessPage.jsx        # Business empire management
+│   ├── StakingPage.jsx         # Economic staking system
+│   ├── SocialPage.jsx          # Housing, banking, relationships
+│   └── ProfilePage.jsx         # Player stats and achievements
+├── config/                  # Game configuration
+│   ├── stakingConfig.js        # Staking pools and calculations
+│   ├── economicSimulationConfig.js # Market dynamics
+│   ├── businessConfig.js       # Business types and mechanics
+│   ├── jobsConfig.js           # Career and education
+│   └── housingConfig.js        # Housing and real estate
+├── store/                   # State management
+│   └── gameStore.js            # Zustand store with economic systems
+└── services/                # API integration
+    ├── api.js                  # Backend communication
+    └── tonIntegration.js       # TON blockchain integration
 ```
 
-### Backend (Node.js + Express)
+### 🔧 **Backend (Node.js + Express)**
 
 ```
 server/
-├── routes/             # API route handlers
-├── middleware/         # Express middleware
-├── config/             # Database and service configs
-├── utils/              # Backend utilities
-├── database/           # Database schema and migrations
-└── logs/               # Application logs
+├── routes/                  # API endpoints
+│   ├── game.js                 # Core game mechanics
+│   ├── staking.js              # Staking pool management
+│   ├── governance.js           # Community voting
+│   └── economics.js            # Market simulation
+├── services/                # Business logic
+│   ├── EconomicEngine.js       # Market dynamics calculator
+│   ├── StakingService.js       # Staking pool management
+│   └── GovernanceService.js    # Voting and proposals
+├── middleware/              # Request processing
+│   ├── auth.js                 # Authentication
+│   ├── antiCheat.js            # Fraud prevention
+│   └── rateLimit.js            # API rate limiting
+└── config/                  # Configuration
+    ├── database.js             # Database connection
+    ├── redis.js                # Caching layer
+    └── ton.js                  # Blockchain integration
 ```
 
-### Database (Supabase/PostgreSQL)
+### 💾 **Database Schema (Supabase)**
 
-- **users**: Player profiles and life progress
-- **careers**: Job history and education records
-- **housing**: Property ownership and mortgages
-- **banking**: Accounts, loans, and credit history
-- **relationships**: Social connections and interactions
-- **businesses**: Business ownership and management
-- **dynasty**: Multi-generational progress and legacy
-- **transactions**: TON blockchain transactions
+```sql
+-- Core game tables
+users                    # Player profiles and stats
+businesses              # Business ownership and levels
+staking_positions       # Active staking positions
+governance_proposals    # Community proposals
+economic_events         # Active market events
 
-## 🎯 Core Features
+-- Life simulation tables
+careers                 # Job history and education
+housing                 # Property ownership
+banking                 # Financial accounts and loans
+relationships          # Social connections
 
-### Life Management System
+-- Economic simulation tables
+market_prices          # Real-time asset pricing
+supply_chain          # Resource dependencies
+industry_clusters     # Geographic business synergies
+economic_indicators   # Inflation, GDP, unemployment
 
-- ✅ **Housing**: 8 property types from homeless to luxury mansion
-- ✅ **Career**: 50+ jobs across 6 categories with progression
-- ✅ **Education**: High school through advanced degrees
-- ✅ **Banking**: Multiple account types, loans, credit cards
-- ✅ **Credit System**: Dynamic credit scoring affecting opportunities
-
-### Social & Relationship System
-
-- ✅ **Relationships**: Family, friends, romantic, professional
-- ✅ **Social Activities**: Dates, parties, networking events
-- ✅ **Happiness System**: Relationship and lifestyle bonuses
-- ✅ **Network Effects**: Relationships impact career and business
-
-### Business Empire
-
-- ✅ **15+ Business Types**: Restaurants, tech, real estate, etc.
-- ✅ **Staff Management**: Hire, train, and manage employees
-- ✅ **Supply Chain**: Resource management and optimization
-- ✅ **Market Events**: News events affecting business performance
-
-### Dynasty & Legacy
-
-- ✅ **Multi-Generational**: Plan across multiple lifetimes
-- ✅ **Legacy Points**: Inherit advantages for future generations
-- ✅ **Dynasty Tiers**: Progress from startup to global empire
-- ✅ **Trait System**: Pass down beneficial traits
-
-### Blockchain Integration
-
-- ✅ **TON Wallet Connection**: TonConnect integration
-- ✅ **Achievement Rewards**: Convert milestones to TON tokens
-- ✅ **Transaction Verification**: Blockchain validation
-- ✅ **Secure Withdrawals**: Anti-fraud protection
-
-## 🔧 Development
-
-### Available Scripts
-
-```bash
-# Frontend
-npm run dev              # Start development server
-npm run build            # Build for production
-npm run preview          # Preview production build
-npm run lint             # Run ESLint
-
-# Backend
-cd server
-npm run dev              # Start with nodemon
-npm run start            # Start production server
-npm run test             # Run tests
-
-# Database
-supabase db reset        # Reset database
-supabase db push         # Apply migrations
-supabase gen types       # Generate TypeScript types
+-- Blockchain integration
+ton_transactions      # TON blockchain transactions
+withdrawal_requests   # Pending TON withdrawals
+staking_rewards      # Earned staking rewards
 ```
 
-### Environment Variables
+## 🎯 **Game Mechanics Deep Dive**
 
-#### Frontend (.env)
+### 🏠 **Life Simulation System**
 
-```env
-VITE_API_URL=http://localhost:3000
-VITE_TELEGRAM_BOT_NAME=your_bot_name
-```
+#### **Housing Progression** (8 Types)
+- Homeless → Shelter → Apartment → House → Mansion → Estate → Island → Space Station
+- Each tier affects happiness, opportunities, and social status
+- Mortgage system with realistic credit requirements
 
-#### Backend (server/.env)
+#### **Career Development** (50+ Jobs)
+- Education requirements: High School → College → Graduate → Doctorate
+- 6 career categories with realistic progression paths
+- Skill development affects income and opportunities
 
-```env
-# Database
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_key
+#### **Banking & Credit**
+- Multiple account types with different interest rates
+- Credit scoring system affects loan availability
+- Investment opportunities based on wealth level
 
-# Security
-JWT_SECRET=your_jwt_secret
-TELEGRAM_BOT_TOKEN=your_bot_token
+### 🏢 **Business Empire System**
 
-# TON Blockchain
-TON_NETWORK=testnet
-TON_API_KEY=your_ton_api_key
-```
+#### **Business Categories** (10 Industries)
+1. **Food & Beverage**: Lemonade stands → Restaurant chains
+2. **Retail & Commerce**: Convenience stores → Fashion boutiques
+3. **Technology**: App development → Gaming studios
+4. **Real Estate**: Apartments → Office towers
+5. **Manufacturing**: Electronics → Automotive
+6. **Finance**: Investment firms → International banks
+7. **Entertainment**: Movie theaters → Media empires
+8. **Healthcare**: Clinics → Hospital networks
+9. **Energy**: Solar farms → Nuclear plants
+10. **Aerospace**: Space tourism → Mars colonies
 
-## 🔐 Security
+#### **Supply Chain Dependencies**
+- **Restaurants** require farmers and food processors
+- **Tech companies** need manufacturing and rare materials
+- **Real estate** depends on construction and materials
+- **Manufacturing** requires raw materials and energy
 
-### Authentication
+#### **Staff Management**
+- 4 employee types: Basic Worker → Specialist → Manager
+- Productivity bonuses from skilled workforce
+- Training systems to improve employee efficiency
 
-- Telegram Web App authentication
-- JWT token validation
-- Rate limiting on all endpoints
-- CORS protection
+### 💰 **Economic Staking System**
 
-### Anti-Cheat Measures
+#### **Pool Mechanics**
+- **Lock Periods**: 7-180 days based on pool type
+- **APY Calculation**: Dynamic rates based on pool performance
+- **Early Withdrawal**: Penalties for unstaking before lock expiry
+- **Compound Growth**: Automatic reward reinvestment options
 
-- Server-side validation of all actions
-- Behavioral analysis for suspicious activity
-- Rate limiting on tap actions
-- Transaction verification
+#### **Governance Integration**
+- **Voting Power**: Based on staked amount × tenure multiplier
+- **Proposal Threshold**: Minimum staking required to submit proposals
+- **Implementation**: Community-voted changes affect all players
 
-### Data Protection
+### 🌍 **Economic Simulation Engine**
 
-- Environment variables for sensitive data
-- Encrypted database connections
-- Secure API endpoints
-- Input validation and sanitization
+#### **Market Dynamics**
+- **Price Discovery**: Supply and demand determine business values
+- **Inflation Modeling**: Realistic economic pressures
+- **Market Events**: Crashes, booms, and regulatory changes
+- **Cross-Player Effects**: Your actions affect everyone's market
 
-## 📊 Monitoring
+#### **Economic Events**
+- **Market Crash**: 40% business income reduction (stakers get 50% protection)
+- **Innovation Boom**: Tech businesses get 80% income boost
+- **Infrastructure Crisis**: Manufacturing disrupted, infrastructure stakers provide stability
+- **Resource Shortage**: Supply chain disruptions affect dependent businesses
+- **Regulatory Changes**: Government policies affect specific industries
 
-### Logging
+## 🔐 Security & Anti-Cheat
 
-- Structured logging with Winston
-- Request/response logging
-- Error tracking
-- Performance metrics
+### 🛡️ **Multi-Layer Protection**
 
-### Health Checks
+#### **Server-Side Validation**
+- All economic calculations verified server-side
+- Rate limiting on all sensitive actions
+- Behavioral analysis for suspicious patterns
 
-- `/health` endpoint for server status
-- Database connection monitoring
-- Redis connection status
-- Supabase integration status
+#### **Blockchain Security**
+- TON smart contracts for staking pools
+- Multi-signature withdrawals for large amounts
+- Transaction verification before processing
+
+#### **Anti-Manipulation**
+- Market manipulation detection
+- Artificial scarcity prevention
+- Fair distribution algorithms
+
+### 🔒 **Data Protection**
+- End-to-end encryption for sensitive data
+- GDPR compliance for EU users
+- Regular security audits and updates
+
+## 📊 **Economic Metrics & KPIs**
+
+### 🎯 **Player Metrics**
+- **Total Wealth**: Cash + businesses + real estate + staking positions
+- **Economic Class**: Working Class → Ultra Rich (5 tiers)
+- **Market Influence**: Ability to affect prices and policies
+- **Political Power**: Governance voting weight
+
+### 🌍 **Global Economic Indicators**
+- **Inflation Rate**: Community-wide price increases
+- **Total Value Locked**: TON staked in all pools
+- **Economic Activity**: Transaction volume and business creation
+- **Market Stability**: Price volatility measurements
+
+### 🏆 **Success Metrics**
+- **Daily Active Stakers**: Players participating in staking
+- **Governance Participation**: Voting and proposal activity
+- **Economic Interconnectedness**: Supply chain utilization
+- **Community Treasury**: Funds available for projects
 
 ## 🚀 Deployment
 
-### Frontend (Vercel/Netlify)
+### 🌐 **Production Deployment**
 
-1. Build the project: `npm run build`
-2. Deploy the `dist` folder
-3. Set environment variables in deployment platform
+#### **Frontend (Vercel/Netlify)**
+```bash
+npm run build
+# Deploy dist/ folder with environment variables
+```
 
-### Backend (Railway/Heroku)
+#### **Backend (Railway/Heroku)**
+```bash
+# Set environment variables
+# Deploy from Git with automatic migrations
+```
 
-1. Set up environment variables
-2. Deploy from Git repository
-3. Run database migrations
-4. Configure custom domain (optional)
+#### **TON Integration**
+```bash
+# Configure TON network settings
+# Deploy staking smart contracts
+# Set up governance contracts
+```
 
-### Database (Supabase)
-
-1. Create new project
-2. Apply schema from `database/schema.sql`
-3. Configure Row Level Security (RLS)
-4. Set up API keys
+### 📈 **Scaling Considerations**
+- **Database Sharding**: Horizontal scaling for user data
+- **Redis Caching**: Real-time data caching layer
+- **CDN Integration**: Global content delivery
+- **Load Balancing**: Multiple server instances
 
 ## 🤝 Contributing
 
+### 🛠️ **Development Setup**
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+2. Create feature branch: `git checkout -b feature/economic-improvement`
+3. Implement changes with tests
+4. Submit pull request with detailed description
 
-### Code Style
+### 📋 **Contribution Guidelines**
+- **Code Style**: ESLint + Prettier configuration
+- **Testing**: Unit tests for new features
+- **Documentation**: Update wiki for new mechanics
+- **Security**: Review for economic vulnerabilities
 
-- Use ESLint and Prettier for formatting
-- Follow React best practices
-- Write meaningful commit messages
-- Add tests for new features
+### 🎯 **Priority Areas**
+- Economic simulation improvements
+- New staking pool designs
+- Governance mechanism enhancements
+- Cross-chain integration
+- Mobile app development
 
-## 📝 API Documentation
+## 📚 Documentation
 
-### Authentication
+### 📖 **Wiki Resources**
+- [Game Mechanics Guide](docs/wiki/Game-Mechanics.md)
+- [Staking Strategy Guide](docs/wiki/Staking-Strategy.md)
+- [Economic Simulation Manual](docs/wiki/Economic-Simulation.md)
+- [Governance Participation](docs/wiki/Governance-Guide.md)
+- [API Documentation](docs/api/README.md)
 
-All API requests require a valid Telegram Web App init data header:
-
-```
-x-telegram-init-data: <telegram_web_app_init_data>
-```
-
-### Endpoints
-
-#### Game API
-
-- `GET /api/game/profile` - Get user profile
-- `POST /api/game/tap` - Record tap action
-- `GET /api/game/businesses` - Get available businesses
-- `POST /api/game/business/buy` - Purchase business
-- `POST /api/game/business/upgrade` - Upgrade business
-
-#### TON Integration
-
-- `POST /api/ton/connect` - Connect TON wallet
-- `POST /api/ton/withdraw` - Withdraw points as TON
-- `GET /api/ton/transactions` - Get transaction history
-
-#### Social Features
-
-- `GET /api/social/leaderboard` - Get leaderboard
-- `POST /api/social/refer` - Process referral
-- `GET /api/social/stats` - Get social statistics
+### 🎓 **Learning Resources**
+- [Economic Theory Behind the Game](docs/guides/Economic-Theory.md)
+- [Staking Pool Mathematics](docs/guides/Staking-Math.md)
+- [Supply Chain Optimization](docs/guides/Supply-Chain.md)
+- [Governance Best Practices](docs/guides/Governance.md)
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### ❓ **Common Issues**
 
-**Buffer is not defined**
+**Staking Transaction Failed**
+- Check TON wallet connection
+- Verify sufficient balance for gas fees
+- Ensure network connectivity
 
-- Solution: Polyfills are included in `src/polyfills.js`
-- Ensure polyfills are imported first in `main.jsx`
+**Economic Data Not Updating**
+- Refresh the Economics dashboard
+- Check server connection status
+- Clear browser cache if needed
 
-**Supabase connection failed**
-
-- Check environment variables in `server/.env`
-- Verify Supabase project is active
-- Ensure database schema is applied
-
-**TON wallet connection issues**
-
-- Verify TonConnect configuration
-- Check network settings (mainnet/testnet)
-- Ensure wallet app is installed
+**Governance Vote Not Recorded**
+- Verify voting power requirements
+- Check proposal deadline status
+- Ensure single vote per proposal
 
 ## 📄 License
 
@@ -358,19 +426,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- [TON Blockchain](https://ton.org/) - Staking and governance infrastructure
 - [Telegram Web Apps](https://core.telegram.org/bots/webapps) - Platform foundation
-- [TON Blockchain](https://ton.org/) - Cryptocurrency integration
-- [Supabase](https://supabase.com/) - Backend infrastructure
-- [React](https://reactjs.org/) - Frontend framework
-- [Framer Motion](https://www.framer.com/motion/) - Animations
+- [Supabase](https://supabase.com/) - Real-time database
+- [Framer Motion](https://www.framer.com/motion/) - Smooth animations
+- Economic simulation inspired by real market dynamics
 
-## 📞 Support
+## 📞 Support & Community
 
-- 📧 Email: <support@billionaire-empire.com>
-- 💬 Telegram: @BillionaireEmpireBot
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/telegram-billionaire-sim/issues)
-- 📖 Wiki: [Project Wiki](https://github.com/yourusername/telegram-billionaire-sim/wiki)
+- 📧 **Email**: support@billionaire-empire.com
+- 💬 **Telegram**: @BillionaireEmpireBot
+- 🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/telegram-billionaire-sim/issues)
+- 📖 **Wiki**: [Complete Documentation](docs/wiki/Home.md)
+- 🗳️ **Governance**: [Community Proposals](https://app.billionaire-empire.com/governance)
 
 ---
 
-**Made with ❤️ for the Telegram and TON communities**
+**🌟 Join the Economic Revolution - Where Gaming Meets Real Finance! 💰**
+
+*Built with ❤️ for the decentralized future*

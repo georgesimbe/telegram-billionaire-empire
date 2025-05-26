@@ -9,7 +9,8 @@ import InvestmentPage from './pages/InvestmentPage';
 import SocialPage from './pages/SocialPage';
 import ProfilePage from './pages/ProfilePage';
 import CareerPage from './pages/CareerPage';
-import DynastyPage from './pages/DynastyPage';
+import StakingPage from './pages/StakingPage';
+import SettingsPage from './pages/SettingsPage';
 import Navigation from './components/Navigation';
 import AntiCheatWrapper from './components/AntiCheatWrapper';
 import ParticleBackground from './components/ParticleBackground';
@@ -119,8 +120,9 @@ function App() {
                 <Route path="/career" element={<CareerPage />} />
                 <Route path="/invest" element={<InvestmentPage />} />
                 <Route path="/social" element={<SocialPage />} />
-                <Route path="/dynasty" element={<DynastyPage />} />
+                <Route path="/staking" element={<StakingPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <Navigation />

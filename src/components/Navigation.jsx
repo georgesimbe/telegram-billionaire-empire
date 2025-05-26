@@ -11,8 +11,9 @@ const Navigation = () => {
     { path: '/career', icon: '💼', label: 'Career' },
     { path: '/business', icon: '🏢', label: 'Business' },
     { path: '/social', icon: '👥', label: 'Social' },
-    { path: '/dynasty', icon: '👑', label: 'Dynasty' },
+    { path: '/staking', icon: '💰', label: 'Staking' },
     { path: '/profile', icon: '👤', label: 'Profile' },
+    { path: '/settings', icon: '⚙️', label: 'Settings' },
   ];
 
   return (

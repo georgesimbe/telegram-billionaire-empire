@@ -1,522 +1,574 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useGameStore } from '../store/gameStore';
+import { motion } from 'framer-motion';
 import {
-  JOB_CATEGORIES,
-  JOBS_CONFIG,
-  EDUCATION_LEVELS,
-  SKILL_TYPES,
-  getJobsByCategory,
-  getAvailableJobs,
-  calculateSalary,
-  calculateJobSalary,
-  calculateSkillRequirements,
-  getPromotionPath,
-  getCareerAdvice,
-  simulateJobMarket
-} from '../config/jobsConfig';
+  AcademicCapIcon,
+  BriefcaseIcon,
+  ChartBarIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  StarIcon,
+  TrophyIcon,
+  BookOpenIcon,
+  UserGroupIcon,
+  ArrowUpIcon,
+  CheckCircleIcon,
+  XCircleIcon
+} from '@heroicons/react/24/outline';
+import useGameStore from '../store/gameStore';
 import { formatNumber } from '../utils/formatters';
-import AnimatedButton from '../components/AnimatedButton';
-import LoadingSpinner from '../components/LoadingSpinner';
+import HintIcon, { QuickHint } from '../components/HintIcon';
+import {
+  EDUCATION_LEVELS,
+  CERTIFICATIONS,
+  JOB_CATEGORIES,
+  SKILLS,
+  getAvailableEducation,
+  getAvailableJobs,
+  calculateJobSalary,
+  getEducationProgress,
+  getCareerAdvancement
+} from '../config/educationConfig';
 
 const CareerPage = () => {
   const {
     player,
-    updatePlayer,
-    spendMoney,
-    addIncome,
-    addExperience
+    career,
+    enrollInEducation,
+    completeEducation,
+    applyForJob,
+    acceptJob,
+    quitJob,
+    improveSkill
   } = useGameStore();
 
-  const [activeTab, setActiveTab] = useState('jobs');
-  const [selectedCategory, setSelectedCategory] = useState('entry_level');
-  const [jobApplications, setJobApplications] = useState([]);
-  const [showJobDetails, setShowJobDetails] = useState(null);
-  const [jobMarket, setJobMarket] = useState({});
-  const [skillTraining, setSkillTraining] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedEducation, setSelectedEducation] = useState(null);
+  const [selectedJob, setSelectedJob] = useState(null);
 
-  // Initialize job market
+  // Calculate available options
+  const availableEducation = getAvailableEducation(player.level, career.education, player.creditScore);
+  const availableJobs = getAvailableJobs(career.education, career.certifications, career.workExperience);
+  const careerAdvancement = getCareerAdvancement(career.currentJob, career.education, career.workExperience, career.skills);
+
+  // Education progress
+  const educationProgress = career.currentEducation ?
+    getEducationProgress(career.currentEducation.startDate, EDUCATION_LEVELS[career.currentEducation.type]?.duration) : null;
+
   useEffect(() => {
-    const market = simulateJobMarket();
-    setJobMarket(market);
-
-    // Update job market every 2 minutes
-    const interval = setInterval(() => {
-      setJobMarket(simulateJobMarket());
-    }, 120000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const tabs = [
-    { id: 'jobs', label: 'Job Search', icon: '🔍' },
-    { id: 'career', label: 'My Career', icon: '📈' },
-    { id: 'education', label: 'Education', icon: '🎓' },
-    { id: 'skills', label: 'Skills', icon: '💪' }
-  ];
-
-  const availableJobs = getAvailableJobs(player);
-  const categoryJobs = getJobsByCategory(selectedCategory);
-
-  const applyForJob = (jobId) => {
-    const job = availableJobs.find(j => j.id === jobId);
-    if (!job) return;
-
-    const requirements = calculateSkillRequirements(job);
-    const playerSkills = player.skills || {};
-
-    // Check if player meets requirements
-    const meetsRequirements = requirements.every(req =>
-      (playerSkills[req.skill] || 0) >= req.level
-    );
-
-    if (!meetsRequirements) {
-      alert('You do not meet the skill requirements for this job.');
-      return;
+    // Auto-complete education when progress reaches 100%
+    if (educationProgress?.isComplete && career.currentEducation && !career.currentEducation.isComplete) {
+      completeEducation();
     }
+  }, [educationProgress, career.currentEducation, completeEducation]);
 
-    // Calculate salary based on player skills and market conditions
-    const salary = calculateJobSalary(job, playerSkills, jobMarket);
-
-    updatePlayer({
-      currentJob: {
-        ...job,
-        salary,
-        startDate: Date.now(),
-        performance: 75, // Starting performance
-        experience: 0
-      }
-    });
-
-    addExperience(50); // XP for getting a job
-  };
-
-  const quitJob = () => {
-    updatePlayer({ currentJob: null });
-  };
-
-  const trainSkill = (skillType, trainingLevel) => {
-    const cost = SKILL_TYPES[skillType].trainingCosts[trainingLevel];
-    if (player.cash < cost) return;
-
-    spendMoney(cost);
-
-    const currentSkills = player.skills || {};
-    const currentLevel = currentSkills[skillType] || 0;
-    const newLevel = Math.min(currentLevel + 1, 100);
-
-    updatePlayer({
-      skills: {
-        ...currentSkills,
-        [skillType]: newLevel
-      }
-    });
-
-    addExperience(25); // XP for skill training
-    setSkillTraining({ skill: skillType, level: newLevel });
-
-    setTimeout(() => setSkillTraining(null), 3000);
-  };
-
-  const pursueEducation = (educationLevel) => {
-    const education = EDUCATION_LEVELS[educationLevel];
-    if (!education || player.cash < education.cost) return;
-
-    spendMoney(education.cost);
-
-    const currentEducation = player.education || [];
-    updatePlayer({
-      education: [...currentEducation, {
-        level: educationLevel,
-        completedAt: Date.now(),
-        gpa: 3.0 + Math.random() * 1.0 // Random GPA between 3.0-4.0
-      }]
-    });
-
-    addExperience(education.xpReward);
-  };
-
-  const JobCard = ({ job, isAvailable = true }) => {
-    const playerSkills = player.skills || {};
-    const salary = calculateJobSalary(job, playerSkills, jobMarket);
-    const requirements = calculateSkillRequirements(job);
-    const meetsRequirements = requirements.every(req =>
-      (playerSkills[req.skill] || 0) >= req.level
-    );
-    const hasJob = player.currentJob !== null;
-
-    return (
-      <motion.div
-        className={`bg-gray-800 rounded-xl p-4 border ${isAvailable ? 'border-gray-600 hover:border-blue-500' : 'border-gray-700 opacity-50'
-          } transition-colors cursor-pointer`}
-        whileHover={isAvailable ? { scale: 1.02 } : {}}
-        onClick={() => isAvailable && setShowJobDetails(job)}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{job.icon}</span>
-            <div>
-              <h3 className="font-semibold text-white">{job.name}</h3>
-              <p className="text-sm text-gray-400">{JOB_CATEGORIES[job.category.toUpperCase()]?.name}</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-green-400">${formatNumber(salary)}/mo</p>
-            <p className="text-xs text-gray-500">{job.workHours}h/week</p>
-          </div>
-        </div>
-
-        <p className="text-sm text-gray-300 mb-3">{job.description}</p>
-
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2">
-            {job.skills.slice(0, 2).map(skill => (
-              <span key={skill} className="px-2 py-1 bg-blue-600/20 text-blue-400 text-xs rounded">
-                {skill.replace('_', ' ')}
-              </span>
-            ))}
-          </div>
-
-          {isAvailable && (
-            <AnimatedButton
-              variant={!meetsRequirements || hasJob ? "secondary" : "primary"}
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (meetsRequirements && !hasJob) applyForJob(job.id);
-              }}
-              disabled={!meetsRequirements || hasJob}
-            >
-              {hasJob ? 'Employed' : !meetsRequirements ? 'Requirements' : 'Apply'}
-            </AnimatedButton>
-          )}
-        </div>
-      </motion.div>
-    );
-  };
-
-  const JobDetailsModal = ({ job, onClose }) => {
-    const salary = calculateSalary(job, experience);
-
-    return (
-      <motion.div
-        className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <motion.div
-          className="bg-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-          initial={{ scale: 0.8, y: 50 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.8, y: 50 }}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">{job.icon}</span>
-              <div>
-                <h2 className="text-2xl font-bold text-white">{job.name}</h2>
-                <p className="text-blue-400">{JOB_CATEGORIES[job.category.toUpperCase()]?.name}</p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white text-xl"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-sm text-gray-400">Monthly Salary</p>
-              <p className="text-xl font-bold text-green-400">${formatNumber(salary)}</p>
-            </div>
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-sm text-gray-400">Work Hours</p>
-              <p className="text-xl font-bold text-white">{job.workHours}h/week</p>
-            </div>
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-sm text-gray-400">Stress Level</p>
-              <p className="text-xl font-bold text-orange-400">{job.stressLevel}/10</p>
-            </div>
-            <div className="bg-gray-700/50 rounded-lg p-3">
-              <p className="text-sm text-gray-400">Experience Gain</p>
-              <p className="text-xl font-bold text-purple-400">+{job.experienceGain}/mo</p>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="font-semibold text-white mb-3">Job Description</h3>
-            <p className="text-gray-300">{job.description}</p>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="font-semibold text-white mb-3">Requirements</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Education:</span>
-                <span className="text-sm text-white">{EDUCATION_LEVELS[job.requirements.education.toUpperCase()]?.name}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Experience:</span>
-                <span className="text-sm text-white">{job.requirements.experience} months</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <h3 className="font-semibold text-white mb-3">Required Skills</h3>
-            <div className="flex flex-wrap gap-2">
-              {job.skills.map(skill => (
-                <span key={skill} className="px-3 py-1 bg-blue-600/20 text-blue-400 text-sm rounded-full">
-                  {skill.replace('_', ' ')}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {job.promotionPath.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold text-white mb-3">Career Path</h3>
-              <div className="flex items-center gap-2">
-                {job.promotionPath.map((nextJob, index) => (
-                  <React.Fragment key={nextJob}>
-                    <span className="px-2 py-1 bg-green-600/20 text-green-400 text-sm rounded">
-                      {nextJob.replace('_', ' ')}
-                    </span>
-                    {index < job.promotionPath.length - 1 && (
-                      <span className="text-gray-400">→</span>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <AnimatedButton
-              variant="secondary"
-              size="md"
-              onClick={onClose}
-              className="flex-1"
-            >
-              Close
-            </AnimatedButton>
-            <AnimatedButton
-              variant="primary"
-              size="md"
-              onClick={() => {
-                handleApplyForJob(job);
-                onClose();
-              }}
-              className="flex-1"
-            >
-              Apply for Job
-            </AnimatedButton>
-          </div>
-        </motion.div>
-      </motion.div>
-    );
-  };
-
-  return (
-    <div className="p-4 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Career Center</h1>
-        <p className="text-gray-400">Build your career and advance your professional life</p>
-      </div>
-
+  const renderOverviewTab = () => (
+    <div className="space-y-6">
       {/* Current Status */}
-      <div className="bg-gray-800 rounded-xl p-4 mb-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p className="text-sm text-gray-400">Current Job</p>
-            <p className="font-semibold text-white">
-              {currentJob ? currentJob.name : 'Unemployed'}
-            </p>
+      <div className="bg-gray-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white">Career Overview</h3>
+          <QuickHint hintKey="CAREER_PROGRESSION" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-400">Current Education</p>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">
+                  {EDUCATION_LEVELS[career.education]?.icon || '🎓'}
+                </span>
+                <span className="font-semibold text-white">
+                  {EDUCATION_LEVELS[career.education]?.name || 'High School'}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-400">Current Job</p>
+              <div className="flex items-center space-x-2">
+                <BriefcaseIcon className="h-5 w-5 text-blue-400" />
+                <span className="font-semibold text-white">
+                  {career.currentJob?.name || 'Unemployed'}
+                </span>
+              </div>
+              {career.currentJob && (
+                <p className="text-sm text-green-400 mt-1">
+                  ${formatNumber(career.currentJob.salary)}/month
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-400">Work Experience</p>
+              <div className="flex items-center space-x-2">
+                <ClockIcon className="h-5 w-5 text-yellow-400" />
+                <span className="font-semibold text-white">
+                  {Math.floor(career.workExperience / 30)} months
+                </span>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-gray-400">Monthly Income</p>
-            <p className="font-semibold text-green-400">${formatNumber(playerStats.monthlyIncome)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-400">Experience</p>
-            <p className="font-semibold text-purple-400">{experience} months</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-400">Education</p>
-            <p className="font-semibold text-blue-400">{EDUCATION_LEVELS[education.toUpperCase()]?.name}</p>
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-400">Certifications</p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {career.certifications.length > 0 ? (
+                  career.certifications.map(certId => {
+                    const cert = CERTIFICATIONS[certId];
+                    return (
+                      <span key={certId} className="px-2 py-1 bg-purple-600 text-white text-xs rounded">
+                        {cert?.icon} {cert?.name}
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span className="text-gray-500 text-sm">None</span>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-400">Monthly Income</p>
+              <div className="flex items-center space-x-2">
+                <CurrencyDollarIcon className="h-5 w-5 text-green-400" />
+                <span className="font-semibold text-white">
+                  ${formatNumber(player.monthlyIncome)}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-400">Career Level</p>
+              <div className="flex items-center space-x-2">
+                <StarIcon className="h-5 w-5 text-yellow-400" />
+                <span className="font-semibold text-white">
+                  Level {player.level}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-700 mb-6">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors ${activeTab === tab.id
-              ? 'text-white border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-white'
-              }`}
-          >
-            <span>{tab.icon}</span>
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Current Education Progress */}
+      {career.currentEducation && (
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-xl font-bold text-white mb-4">Education in Progress</h3>
 
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        {activeTab === 'jobs' && (
-          <motion.div
-            key="jobs"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            {/* Category Filter */}
-            <div className="mb-6">
-              <h3 className="font-semibold text-white mb-3">Job Categories</h3>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(JOB_CATEGORIES).map(([key, category]) => (
-                  <button
-                    key={key}
-                    onClick={() => setSelectedCategory(key.toLowerCase())}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${selectedCategory === key.toLowerCase()
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      }`}
-                  >
-                    {category.icon} {category.name}
-                  </button>
-                ))}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <span className="text-2xl">
+                  {EDUCATION_LEVELS[career.currentEducation.type]?.icon}
+                </span>
+                <div>
+                  <h4 className="font-semibold text-white">
+                    {EDUCATION_LEVELS[career.currentEducation.type]?.name}
+                  </h4>
+                  <p className="text-sm text-gray-400">
+                    {EDUCATION_LEVELS[career.currentEducation.type]?.description}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-400">Progress</p>
+                <p className="font-semibold text-white">
+                  {educationProgress?.progress.toFixed(1)}%
+                </p>
               </div>
             </div>
 
-            {/* Job Listings */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {categoryJobs.map(job => (
-                <JobCard
-                  key={job.id}
-                  job={job}
-                  isAvailable={availableJobs.some(availableJob => availableJob.id === job.id)}
-                />
-              ))}
+            <div className="w-full bg-gray-700 rounded-full h-3">
+              <div
+                className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${educationProgress?.progress || 0}%` }}
+              />
             </div>
-          </motion.div>
-        )}
 
-        {activeTab === 'career' && (
-          <motion.div
-            key="career"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            {currentJob ? (
-              <div className="space-y-6">
-                <div className="bg-gray-800 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl">{currentJob.icon}</span>
-                      <div>
-                        <h3 className="text-xl font-bold text-white">{currentJob.name}</h3>
-                        <p className="text-gray-400">{JOB_CATEGORIES[currentJob.category.toUpperCase()]?.name}</p>
-                      </div>
-                    </div>
-                    <AnimatedButton
-                      variant="danger"
-                      size="sm"
-                      onClick={handleQuitJob}
-                    >
-                      Quit Job
-                    </AnimatedButton>
+            <div className="flex justify-between text-sm text-gray-400">
+              <span>Started: {new Date(career.currentEducation.startDate).toLocaleDateString()}</span>
+              <span>
+                {educationProgress?.daysRemaining > 0
+                  ? `${educationProgress.daysRemaining} days remaining`
+                  : 'Complete!'
+                }
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Career Advancement */}
+      {careerAdvancement.nextJob && (
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-xl font-bold text-white mb-4">Career Advancement</h3>
+
+          <div className="bg-gray-700 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-white">Next Career Step</h4>
+              <ArrowUpIcon className="h-5 w-5 text-green-400" />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-white font-semibold">{careerAdvancement.nextJob.name}</p>
+              <p className="text-green-400">
+                +${formatNumber(careerAdvancement.salaryIncrease)}/month increase
+              </p>
+
+              {careerAdvancement.recommendedSkills.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-400 mb-2">Recommended Skills:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {careerAdvancement.recommendedSkills.map(skill => (
+                      <span key={skill} className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                        {skill.replace('_', ' ')}
+                      </span>
+                    ))}
                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-gray-700/50 rounded-lg p-3">
-                      <p className="text-sm text-gray-400">Monthly Salary</p>
-                      <p className="text-lg font-bold text-green-400">${formatNumber(calculateSalary(currentJob, experience))}</p>
+  const renderEducationTab = () => (
+    <div className="space-y-6">
+      <div className="bg-gray-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white">Education & Training</h3>
+          <QuickHint hintKey="EDUCATION_SYSTEM" />
+        </div>
+
+        <div className="grid gap-4">
+          {availableEducation.map(education => {
+            const canAfford = player.cash >= education.cost;
+            const isCurrentlyEnrolled = career.currentEducation?.type === education.id;
+
+            return (
+              <motion.div
+                key={education.id}
+                whileHover={{ scale: 1.02 }}
+                className={`bg-gray-700 rounded-lg p-4 cursor-pointer border-2 transition-colors ${selectedEducation === education.id
+                    ? 'border-blue-500'
+                    : 'border-transparent hover:border-gray-600'
+                  } ${!canAfford ? 'opacity-50' : ''}`}
+                onClick={() => setSelectedEducation(education.id)}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{education.icon}</span>
+                    <div>
+                      <h4 className="font-semibold text-white">{education.name}</h4>
+                      <p className="text-sm text-gray-400">{education.description}</p>
                     </div>
-                    <div className="bg-gray-700/50 rounded-lg p-3">
-                      <p className="text-sm text-gray-400">Work Hours</p>
-                      <p className="text-lg font-bold text-white">{currentJob.workHours}h/week</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-white">${formatNumber(education.cost)}</p>
+                    <p className="text-sm text-gray-400">{education.duration} days</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <p className="text-xs text-gray-400">Benefits</p>
+                    <div className="space-y-1">
+                      <p className="text-sm text-green-400">
+                        +{((education.benefits.jobMultiplier - 1) * 100).toFixed(0)}% salary multiplier
+                      </p>
+                      <p className="text-sm text-blue-400">
+                        +{education.benefits.skillPoints} skill points
+                      </p>
+                      <p className="text-sm text-purple-400">
+                        +{education.benefits.socialStatus} social status
+                      </p>
                     </div>
-                    <div className="bg-gray-700/50 rounded-lg p-3">
-                      <p className="text-sm text-gray-400">Job Satisfaction</p>
-                      <p className="text-lg font-bold text-blue-400">85%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400">Unlocks</p>
+                    <div className="flex flex-wrap gap-1">
+                      {education.benefits.unlocks.map(unlock => (
+                        <span key={unlock} className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                          {unlock.replace('_', ' ')}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Job Applications */}
-                {jobApplications.length > 0 && (
-                  <div className="bg-gray-800 rounded-xl p-6">
-                    <h3 className="font-semibold text-white mb-4">Pending Applications</h3>
-                    <div className="space-y-3">
-                      {jobApplications.map(application => (
-                        <div key={application.id} className="flex items-center justify-between bg-gray-700/50 rounded-lg p-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl">{application.job.icon}</span>
-                            <div>
-                              <p className="font-medium text-white">{application.job.name}</p>
-                              <p className="text-sm text-gray-400">Applied {application.appliedDate.toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${application.status === 'pending' ? 'bg-yellow-600/20 text-yellow-400' :
-                              application.status === 'accepted' ? 'bg-green-600/20 text-green-400' :
-                                'bg-red-600/20 text-red-400'
-                              }`}>
-                              {application.status}
-                            </span>
-                            {application.status === 'accepted' && (
-                              <AnimatedButton
-                                variant="success"
-                                size="sm"
-                                onClick={() => handleAcceptJob(application.job)}
-                              >
-                                Accept
-                              </AnimatedButton>
-                            )}
-                          </div>
-                        </div>
+                {isCurrentlyEnrolled ? (
+                  <div className="flex items-center justify-center py-2 bg-blue-600 rounded text-white">
+                    <BookOpenIcon className="h-4 w-4 mr-2" />
+                    Currently Enrolled
+                  </div>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (canAfford && !career.currentEducation) {
+                        enrollInEducation(education.id);
+                      }
+                    }}
+                    disabled={!canAfford || career.currentEducation}
+                    className={`w-full py-2 rounded font-semibold transition-colors ${canAfford && !career.currentEducation
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                  >
+                    {!canAfford ? 'Insufficient Funds' :
+                      career.currentEducation ? 'Already Enrolled' : 'Enroll Now'}
+                  </button>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderJobsTab = () => (
+    <div className="space-y-6">
+      <div className="bg-gray-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white">Available Jobs</h3>
+          <QuickHint hintKey="JOB_APPLICATIONS" />
+        </div>
+
+        {career.currentJob && (
+          <div className="bg-gray-700 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-white">Current Job</h4>
+              <button
+                onClick={quitJob}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
+              >
+                Quit Job
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-400">Position</p>
+                <p className="font-semibold text-white">{career.currentJob.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Salary</p>
+                <p className="font-semibold text-green-400">${formatNumber(career.currentJob.salary)}/month</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Start Date</p>
+                <p className="text-white">{new Date(career.currentJob.startDate).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Experience Gained</p>
+                <p className="text-white">
+                  {Math.floor((new Date() - new Date(career.currentJob.startDate)) / (1000 * 60 * 60 * 24))} days
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-4">
+          {availableJobs.map(job => {
+            const salary = calculateJobSalary(job, career.education, career.certifications, career.skills, career.workExperience);
+            const hasApplied = career.jobApplications.some(app => app.jobId === job.id);
+            const isCurrentJob = career.currentJob?.id === job.id;
+
+            return (
+              <motion.div
+                key={job.id}
+                whileHover={{ scale: 1.02 }}
+                className={`bg-gray-700 rounded-lg p-4 cursor-pointer border-2 transition-colors ${selectedJob === job.id
+                    ? 'border-blue-500'
+                    : 'border-transparent hover:border-gray-600'
+                  } ${isCurrentJob ? 'opacity-50' : ''}`}
+                onClick={() => setSelectedJob(job.id)}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-white">{job.name}</h4>
+                    <p className="text-sm text-gray-400">
+                      Required: {EDUCATION_LEVELS[job.requirements.education]?.name}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-green-400">${formatNumber(salary)}/month</p>
+                    <p className="text-sm text-gray-400">Base: ${formatNumber(job.salary)}</p>
+                  </div>
+                </div>
+
+                {job.skills && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-400 mb-2">Required Skills</p>
+                    <div className="flex flex-wrap gap-2">
+                      {job.skills.map(skill => (
+                        <span key={skill} className="px-2 py-1 bg-blue-600 text-white text-xs rounded">
+                          {skill.replace('_', ' ')}
+                        </span>
                       ))}
                     </div>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <span className="text-6xl mb-4 block">💼</span>
-                <h3 className="text-xl font-bold text-white mb-2">No Current Job</h3>
-                <p className="text-gray-400 mb-6">Start your career by applying for jobs in the Job Search tab</p>
-                <AnimatedButton
-                  variant="primary"
-                  size="md"
-                  onClick={() => setActiveTab('jobs')}
-                >
-                  Find Jobs
-                </AnimatedButton>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* Job Details Modal */}
-      <AnimatePresence>
-        {showJobDetails && (
-          <JobDetailsModal
-            job={showJobDetails}
-            onClose={() => setShowJobDetails(null)}
-          />
-        )}
-      </AnimatePresence>
+                {isCurrentJob ? (
+                  <div className="flex items-center justify-center py-2 bg-blue-600 rounded text-white">
+                    <CheckCircleIcon className="h-4 w-4 mr-2" />
+                    Current Job
+                  </div>
+                ) : hasApplied ? (
+                  <div className="flex items-center justify-center py-2 bg-yellow-600 rounded text-white">
+                    <ClockIcon className="h-4 w-4 mr-2" />
+                    Application Pending
+                  </div>
+                ) : (
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        applyForJob(job.id);
+                      }}
+                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-semibold transition-colors"
+                    >
+                      Apply
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        acceptJob(job.id);
+                      }}
+                      className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-semibold transition-colors"
+                    >
+                      Accept Directly
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSkillsTab = () => (
+    <div className="space-y-6">
+      <div className="bg-gray-800 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-white">Skills Development</h3>
+          <QuickHint hintKey="SKILL_DEVELOPMENT" />
+        </div>
+
+        <div className="grid gap-4">
+          {Object.entries(SKILLS).map(([skillId, skill]) => {
+            const currentLevel = career.skills[skillId] || 0;
+            const category = skill.category;
+            const categoryColors = {
+              soft: 'bg-green-600',
+              technical: 'bg-blue-600',
+              industry: 'bg-purple-600'
+            };
+
+            return (
+              <div key={skillId} className="bg-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-white">{skill.name}</h4>
+                    <span className={`px-2 py-1 ${categoryColors[category]} text-white text-xs rounded capitalize`}>
+                      {category}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-white">{currentLevel}/100</p>
+                    <p className="text-sm text-gray-400">Level {Math.floor(currentLevel / 10)}</p>
+                  </div>
+                </div>
+
+                <div className="w-full bg-gray-600 rounded-full h-2 mb-3">
+                  <div
+                    className={`h-2 rounded-full ${categoryColors[category]}`}
+                    style={{ width: `${currentLevel}%` }}
+                  />
+                </div>
+
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => improveSkill(skillId, 5)}
+                    disabled={player.cash < 100}
+                    className={`flex-1 py-2 rounded font-semibold transition-colors ${player.cash >= 100
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                  >
+                    Train (+5) - $100
+                  </button>
+                  <button
+                    onClick={() => improveSkill(skillId, 15)}
+                    disabled={player.cash < 500}
+                    className={`flex-1 py-2 rounded font-semibold transition-colors ${player.cash >= 500
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                  >
+                    Course (+15) - $500
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="p-4 max-w-4xl mx-auto pb-20">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Career Development</h1>
+        <HintIcon hintKey="CAREER_OVERVIEW" />
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex space-x-1 mb-6 bg-gray-800 p-1 rounded-lg overflow-x-auto">
+        {[
+          { id: 'overview', name: 'Overview', icon: ChartBarIcon },
+          { id: 'education', name: 'Education', icon: AcademicCapIcon },
+          { id: 'jobs', name: 'Jobs', icon: BriefcaseIcon },
+          { id: 'skills', name: 'Skills', icon: TrophyIcon }
+        ].map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors whitespace-nowrap ${activeTab === tab.id
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span className="text-sm">{tab.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab Content */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {activeTab === 'overview' && renderOverviewTab()}
+        {activeTab === 'education' && renderEducationTab()}
+        {activeTab === 'jobs' && renderJobsTab()}
+        {activeTab === 'skills' && renderSkillsTab()}
+      </motion.div>
     </div>
   );
 };
