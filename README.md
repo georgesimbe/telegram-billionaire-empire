@@ -1,21 +1,23 @@
 # 🏆 Telegram Billionaire Empire
 
-A sophisticated Telegram Mini App that combines idle gaming mechanics with real TON blockchain integration. Build your business empire, earn points, and convert them to real TON tokens!
+A sophisticated Telegram Mini App that combines comprehensive life simulation mechanics with real TON blockchain integration. Build your life from the ground up - get a job, find housing, manage relationships, and grow your business empire!
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Telegram-blue.svg)
 ![Blockchain](https://img.shields.io/badge/blockchain-TON-orange.svg)
 
 ## 🎮 Game Overview
 
-Telegram Billionaire Empire is an idle clicker game where players:
+Telegram Billionaire Empire is a comprehensive life simulation game where players:
 
-- **Tap to Earn**: Click the main button to earn points
-- **Build Businesses**: Invest in various business ventures
-- **Level Up**: Progress through levels to unlock new features
-- **Earn TON**: Convert in-game points to real TON cryptocurrency
-- **Social Features**: Invite friends and compete on leaderboards
+- **🏠 Life Management**: Start from nothing and build your life with housing, career, and relationships
+- **💼 Career Development**: Find jobs, get education, develop skills, and climb the career ladder
+- **🏦 Financial Management**: Manage bank accounts, apply for loans, build credit, and make investments
+- **👥 Social Life**: Build relationships with family, friends, and romantic partners
+- **🏢 Business Empire**: Start and manage multiple businesses across various industries
+- **👑 Dynasty Building**: Plan for multiple generations and build a lasting legacy
+- **💰 Earn TON**: Convert in-game achievements to real TON cryptocurrency
 
 ## 🚀 Quick Start
 
@@ -89,11 +91,25 @@ Telegram Billionaire Empire is an idle clicker game where players:
 ```
 src/
 ├── components/          # Reusable UI components
+│   ├── EnhancedPointsDisplay.jsx
+│   ├── ParticleBackground.jsx
+│   ├── TapButton.jsx
+│   └── ...
 ├── pages/              # Main application pages
+│   ├── HomePage.jsx    # Life dashboard
+│   ├── CareerPage.jsx  # Job and education management
+│   ├── BusinessPage.jsx # Business empire management
+│   ├── SocialPage.jsx  # Housing, banking, relationships
+│   └── DynastyPage.jsx # Multi-generational planning
 ├── store/              # Zustand state management
+├── config/             # Game configuration systems
+│   ├── housingConfig.js
+│   ├── bankingConfig.js
+│   ├── jobsConfig.js
+│   ├── businessConfig.js
+│   └── ...
 ├── services/           # API communication
 ├── utils/              # Helper functions
-├── config/             # Configuration files
 └── styles/             # CSS and styling
 ```
 
@@ -111,43 +127,52 @@ server/
 
 ### Database (Supabase/PostgreSQL)
 
-- **users**: Player profiles and game progress
-- **businesses**: Available business investments
-- **user_businesses**: Player-owned businesses
-- **daily_stats**: Daily activity tracking
-- **referrals**: Referral system data
+- **users**: Player profiles and life progress
+- **careers**: Job history and education records
+- **housing**: Property ownership and mortgages
+- **banking**: Accounts, loans, and credit history
+- **relationships**: Social connections and interactions
+- **businesses**: Business ownership and management
+- **dynasty**: Multi-generational progress and legacy
 - **transactions**: TON blockchain transactions
 
-## 🎯 Features
+## 🎯 Core Features
 
-### Core Gameplay
+### Life Management System
 
-- ✅ **Tap Mechanics**: Earn points by tapping
-- ✅ **Level System**: Progress through 100+ levels
-- ✅ **Business Investments**: 20+ different businesses
-- ✅ **Idle Income**: Passive point generation
-- ✅ **Upgrades**: Improve click power and income
+- ✅ **Housing**: 8 property types from homeless to luxury mansion
+- ✅ **Career**: 50+ jobs across 6 categories with progression
+- ✅ **Education**: High school through advanced degrees
+- ✅ **Banking**: Multiple account types, loans, credit cards
+- ✅ **Credit System**: Dynamic credit scoring affecting opportunities
+
+### Social & Relationship System
+
+- ✅ **Relationships**: Family, friends, romantic, professional
+- ✅ **Social Activities**: Dates, parties, networking events
+- ✅ **Happiness System**: Relationship and lifestyle bonuses
+- ✅ **Network Effects**: Relationships impact career and business
+
+### Business Empire
+
+- ✅ **15+ Business Types**: Restaurants, tech, real estate, etc.
+- ✅ **Staff Management**: Hire, train, and manage employees
+- ✅ **Supply Chain**: Resource management and optimization
+- ✅ **Market Events**: News events affecting business performance
+
+### Dynasty & Legacy
+
+- ✅ **Multi-Generational**: Plan across multiple lifetimes
+- ✅ **Legacy Points**: Inherit advantages for future generations
+- ✅ **Dynasty Tiers**: Progress from startup to global empire
+- ✅ **Trait System**: Pass down beneficial traits
 
 ### Blockchain Integration
 
 - ✅ **TON Wallet Connection**: TonConnect integration
-- ✅ **Point Conversion**: Convert points to TON tokens
+- ✅ **Achievement Rewards**: Convert milestones to TON tokens
 - ✅ **Transaction Verification**: Blockchain validation
 - ✅ **Secure Withdrawals**: Anti-fraud protection
-
-### Social Features
-
-- ✅ **Referral System**: Invite friends for bonuses
-- ✅ **Leaderboards**: Compete with other players
-- ✅ **Daily Rewards**: Login bonuses
-- ✅ **Achievement System**: Unlock rewards
-
-### Anti-Cheat System
-
-- ✅ **Rate Limiting**: Prevent rapid clicking
-- ✅ **Behavior Analysis**: Detect suspicious activity
-- ✅ **Server Validation**: All actions verified server-side
-- ✅ **Telegram Integration**: User verification
 
 ## 🔧 Development
 
@@ -196,9 +221,6 @@ TELEGRAM_BOT_TOKEN=your_bot_token
 # TON Blockchain
 TON_NETWORK=testnet
 TON_API_KEY=your_ton_api_key
-
-# Redis (optional)
-REDIS_URL=redis://localhost:6379
 ```
 
 ## 🔐 Security
