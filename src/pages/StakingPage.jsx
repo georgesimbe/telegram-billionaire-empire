@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import useIntegratedGameStore from '../store/integratedGameStore';
 import EconomicDashboard from '../components/EconomicDashboard';
+import PageHeader from '../components/ui/PageHeader';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import TabNavigation from '../components/ui/TabNavigation';
+import { CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import {
   STAKING_POOLS,
   GOVERNANCE_SYSTEM,
@@ -42,7 +47,7 @@ const StakingPage = () => {
       {/* Portfolio Overview */}
       <div className="bg-gradient-to-r from-blue-900 to-purple-900 rounded-lg p-6">
         <h3 className="text-2xl font-bold text-white mb-4">🏦 Economic Staking Portfolio</h3>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-yellow-400">
@@ -50,21 +55,21 @@ const StakingPage = () => {
             </div>
             <div className="text-sm text-purple-200">Available Balance</div>
           </div>
-          
+
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-green-400">
               {totalStaked.toFixed(2)} TON
             </div>
             <div className="text-sm text-purple-200">Total Staked</div>
           </div>
-          
+
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-blue-400">
               {totalDailyRewards.toFixed(4)} TON
             </div>
             <div className="text-sm text-purple-200">Daily Rewards</div>
           </div>
-          
+
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-purple-400">
               {staking.votingPower.toFixed(0)}
@@ -199,11 +204,11 @@ const StakingPage = () => {
                     <span className="text-3xl">{pool.icon}</span>
                     <div>
                       <h4 className="font-bold text-white text-lg">{pool.name}</h4>
-                      <div className={`text-sm px-2 py-1 rounded ${pool.color === 'blue' ? 'bg-blue-900 text-blue-300' : 
+                      <div className={`text-sm px-2 py-1 rounded ${pool.color === 'blue' ? 'bg-blue-900 text-blue-300' :
                         pool.color === 'purple' ? 'bg-purple-900 text-purple-300' :
-                        pool.color === 'orange' ? 'bg-orange-900 text-orange-300' :
-                        pool.color === 'green' ? 'bg-green-900 text-green-300' :
-                        'bg-emerald-900 text-emerald-300'}`}>
+                          pool.color === 'orange' ? 'bg-orange-900 text-orange-300' :
+                            pool.color === 'green' ? 'bg-green-900 text-green-300' :
+                              'bg-emerald-900 text-emerald-300'}`}>
                         {pool.apy}% APY • {pool.lockPeriod} days lock
                       </div>
                     </div>
@@ -242,13 +247,13 @@ const StakingPage = () => {
                   <h5 className="text-sm font-bold text-white mb-2">Risk Profile:</h5>
                   <div className="space-y-1">
                     <div className="text-xs text-gray-300">
-                      Liquidity Lock: <span className={pool.risks.liquidityLock === 'low' ? 'text-green-400' : 
+                      Liquidity Lock: <span className={pool.risks.liquidityLock === 'low' ? 'text-green-400' :
                         pool.risks.liquidityLock === 'medium' ? 'text-yellow-400' : 'text-red-400'}>
                         {pool.risks.liquidityLock}
                       </span>
                     </div>
                     <div className="text-xs text-gray-300">
-                      Market Exposure: <span className={pool.risks.marketExposure === 'low' ? 'text-green-400' : 
+                      Market Exposure: <span className={pool.risks.marketExposure === 'low' ? 'text-green-400' :
                         pool.risks.marketExposure === 'medium' ? 'text-yellow-400' : 'text-red-400'}>
                         {pool.risks.marketExposure}
                       </span>
@@ -301,7 +306,7 @@ const StakingPage = () => {
             {/* Stake Tokens */}
             <div className="bg-gray-700 rounded-lg p-4">
               <h4 className="font-bold text-white mb-4">💰 Stake Tokens</h4>
-              
+
               <div className="mb-4">
                 <label className="block text-sm text-gray-300 mb-2">Amount to Stake (TON)</label>
                 <input
@@ -358,7 +363,7 @@ const StakingPage = () => {
             {currentStake && (
               <div className="bg-gray-700 rounded-lg p-4">
                 <h4 className="font-bold text-white mb-4">🔓 Unstake Tokens</h4>
-                
+
                 <div className="mb-4">
                   <label className="block text-sm text-gray-300 mb-2">Amount to Unstake (TON)</label>
                   <input
@@ -378,7 +383,7 @@ const StakingPage = () => {
                     <span className="text-gray-400">Current Stake:</span>
                     <span className="text-white">{currentStake.amount.toFixed(2)} TON</span>
                   </div>
-                  
+
                   {unstakeAmount && (() => {
                     const lockEndDate = new Date(currentStake.startDate);
                     lockEndDate.setDate(lockEndDate.getDate() + currentStake.lockPeriod);
@@ -432,7 +437,7 @@ const StakingPage = () => {
       {/* Voting Power Overview */}
       <div className="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-lg p-6">
         <h3 className="text-2xl font-bold text-white mb-4">🗳️ Governance Power</h3>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-purple-400">
@@ -440,21 +445,21 @@ const StakingPage = () => {
             </div>
             <div className="text-sm text-purple-200">Voting Power</div>
           </div>
-          
+
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-blue-400">
               {governance.activeProposals.length}
             </div>
             <div className="text-sm text-purple-200">Active Proposals</div>
           </div>
-          
+
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-green-400">
               {governance.votingHistory.length}
             </div>
             <div className="text-sm text-purple-200">Votes Cast</div>
           </div>
-          
+
           <div className="bg-black/20 rounded-lg p-4">
             <div className="text-2xl font-bold text-yellow-400">
               {governance.submittedProposals.length}
@@ -548,35 +553,31 @@ const StakingPage = () => {
     </div>
   );
 
+  const tabs = [
+    { id: 'overview', name: 'Overview', icon: '📊' },
+    { id: 'pools', name: 'Staking Pools', icon: '💰' },
+    { id: 'manage', name: 'Manage Stakes', icon: '⚙️' },
+    { id: 'governance', name: 'Governance', icon: '🗳️' },
+    { id: 'economics', name: 'Economics', icon: '🌍' }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 p-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">💰 Economic Staking System</h1>
-          <p className="text-blue-200">Stake TON tokens to earn rewards and shape the economy</p>
-        </div>
+      <div className="max-w-7xl mx-auto pb-20">
+        <PageHeader
+          title="Economic Staking System"
+          subtitle="Stake TON tokens to earn rewards and shape the economy"
+          icon={CurrencyDollarIcon}
+          className="text-center mb-8"
+        />
 
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {[
-            { id: 'overview', label: 'Overview', icon: '📊' },
-            { id: 'pools', label: 'Staking Pools', icon: '💰' },
-            { id: 'manage', label: 'Manage Stakes', icon: '⚙️' },
-            { id: 'governance', label: 'Governance', icon: '🗳️' },
-            { id: 'economics', label: 'Economics', icon: '🌍' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-lg font-bold transition-all ${activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
+        <TabNavigation
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          variant="pills"
+          className="flex justify-center mb-8"
+        />
 
         {/* Tab Content */}
         <div className="mb-8">

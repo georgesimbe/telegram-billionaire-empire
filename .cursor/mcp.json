@@ -10,14 +10,14 @@
       ]
     },
     "filesystem": {
-      "command": "uvx",
+      "command": "npx",
       "args": [
         "mcp-server-filesystem",
         "/Users/georgesimbe"
       ]
     },
     "sqlite": {
-      "command": "uvx",
+      "command": "npx",
       "args": [
         "mcp-server-sqlite",
         "--db-path",
@@ -25,12 +25,32 @@
       ]
     },
     "git": {
-      "command": "uvx",
+      "command": "npx",
       "args": [
         "mcp-server-git",
         "--repository",
         "/Users/georgesimbe/telegram-billionaire-sim"
       ]
+    },
+    "time": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-time"
+      ]
     }
+  },
+  "puppeteer": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-puppeteer"
+    ]
+  },
+  "postgres": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-postgres"
+    ]
   }
 }

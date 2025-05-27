@@ -12,11 +12,16 @@ import {
   UserGroupIcon,
   ArrowUpIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import useIntegratedGameStore from '../store/integratedGameStore';
 import { formatNumber } from '../utils/formatters';
 import HintIcon, { QuickHint } from '../components/HintIcon';
+import PageHeader from '../components/ui/PageHeader';
+import Card, { StatCard } from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import TabNavigation from '../components/ui/TabNavigation';
 import {
   EDUCATION_LEVELS,
   CERTIFICATIONS,
@@ -525,37 +530,28 @@ const CareerPage = () => {
     </div>
   );
 
+  const tabs = [
+    { id: 'overview', name: 'Overview', icon: ChartBarIcon },
+    { id: 'education', name: 'Education', icon: AcademicCapIcon },
+    { id: 'jobs', name: 'Jobs', icon: BriefcaseIcon },
+    { id: 'skills', name: 'Skills', icon: TrophyIcon }
+  ];
+
   return (
     <div className="p-4 max-w-4xl mx-auto pb-20">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Career Development</h1>
-        <HintIcon hintKey="CAREER_OVERVIEW" />
-      </div>
+      <PageHeader
+        title="Career Development"
+        subtitle="Advance your education, skills, and career"
+        icon={InformationCircleIcon}
+        rightContent={<HintIcon hintKey="CAREER_OVERVIEW" />}
+      />
 
-      {/* Tab Navigation */}
-      <div className="flex space-x-1 mb-6 bg-gray-800 p-1 rounded-lg overflow-x-auto">
-        {[
-          { id: 'overview', name: 'Overview', icon: ChartBarIcon },
-          { id: 'education', name: 'Education', icon: AcademicCapIcon },
-          { id: 'jobs', name: 'Jobs', icon: BriefcaseIcon },
-          { id: 'skills', name: 'Skills', icon: TrophyIcon }
-        ].map(tab => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors whitespace-nowrap ${activeTab === tab.id
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                }`}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="text-sm">{tab.name}</span>
-            </button>
-          );
-        })}
-      </div>
+      <TabNavigation
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        className="mb-6"
+      />
 
       {/* Tab Content */}
       <motion.div

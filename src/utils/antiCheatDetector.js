@@ -11,7 +11,7 @@ class AntiCheatDetector {
 
   async initialize() {
     if (this.isInitialized) return;
-    
+
     try {
       this.deviceFingerprint = await this.generateDeviceFingerprint();
       this.isInitialized = true;
@@ -27,7 +27,7 @@ class AntiCheatDetector {
     ctx.textBaseline = 'top';
     ctx.font = '14px Arial';
     ctx.fillText('Device fingerprint', 2, 2);
-    
+
     const fingerprint = {
       screen: `${screen.width}x${screen.height}`,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -56,20 +56,20 @@ class AntiCheatDetector {
   checkClickRate() {
     const now = Date.now();
     this.clickTimes.push(now);
-    
+
     // Keep only last second of clicks
     this.clickTimes = this.clickTimes.filter(time => now - time < 1000);
-    
+
     if (this.clickTimes.length > SECURITY_CONFIG.ANTI_CHEAT.MAX_CLICK_RATE) {
       this.addViolation('CLICK_SPAM', { rate: this.clickTimes.length });
       return false;
     }
-    
+
     return true;
   }
 
   // Detect automation tools
-  detectAutomation() {
+  detectAutomation(recentActions = []) {
     const indicators = {
       webdriver: navigator.webdriver,
       phantom: window.phantom || window._phantom,
@@ -78,12 +78,74 @@ class AntiCheatDetector {
     };
 
     const automationDetected = Object.values(indicators).some(Boolean);
-    
+
     if (automationDetected) {
       this.addViolation('AUTOMATION', indicators);
     }
-    
+
     return automationDetected;
+  }
+
+  // Detect impossible timing patterns
+  detectImpossibleTiming(recentActions = []) {
+    if (recentActions.length < 2) return false;
+
+    const timings = recentActions.map(action => {
+      // Handle both Date objects and timestamps
+      return typeof action.timestamp === 'number' ? action.timestamp : new Date(action.timestamp).getTime();
+    });
+    const intervals = [];
+
+    for (let i = 1; i < timings.length; i++) {
+      const interval = timings[i] - timings[i - 1];
+      intervals.push(interval);
+    }
+
+    // Check for impossibly fast actions (less than 10ms between actions)
+    const impossiblyFast = intervals.some(interval => interval < 10);
+
+    // Check for perfectly regular intervals (automation signature)
+    const avgInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+    const variance = intervals.reduce((sum, interval) => sum + Math.pow(interval - avgInterval, 2), 0) / intervals.length;
+    const perfectlyRegular = variance < 5 && intervals.length > 5;
+
+    if (impossiblyFast || perfectlyRegular) {
+      this.addViolation('IMPOSSIBLE_TIMING', {
+        impossiblyFast,
+        perfectlyRegular,
+        intervals: intervals.slice(-5)
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  // Detect value manipulation
+  detectValueManipulation(amount, gameState) {
+    // Check if the amount is reasonable based on game state
+    const maxReasonableAmount = this.getExpectedValueRange(gameState).max;
+
+    if (amount > maxReasonableAmount * 10) {
+      this.addViolation('VALUE_MANIPULATION', {
+        amount,
+        maxExpected: maxReasonableAmount
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  // Get expected value range based on game state
+  getExpectedValueRange(gameState) {
+    const playerLevel = gameState.player?.level || 1;
+    const monthlyIncome = gameState.player?.monthlyIncome || 0;
+
+    return {
+      min: 0,
+      max: Math.max(monthlyIncome * 2, playerLevel * 1000)
+    };
   }
 
   // Add security violation

@@ -375,9 +375,13 @@ export const calculateRelationshipEffects = (relationships) => {
     monthlyExpenses: 0
   };
 
+  if (!Array.isArray(relationships)) {
+    return totalEffects;
+  }
+
   relationships.forEach(relationship => {
     const level = getRelationshipLevel(relationship.points);
-    const type = RELATIONSHIP_TYPES[relationship.type.toUpperCase()];
+    const type = RELATIONSHIP_TYPES[relationship.type?.toUpperCase()];
 
     if (level && type) {
       // Add level effects

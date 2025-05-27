@@ -14,7 +14,8 @@ import {
   TrashIcon,
   ArrowRightOnRectangleIcon,
   QuestionMarkCircleIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 import useIntegratedGameStore from '../store/integratedGameStore';
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
@@ -167,8 +168,8 @@ const SettingsPage = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors whitespace-nowrap ${activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
                 }`}
             >
               <Icon className="h-4 w-4" />
@@ -190,35 +191,6 @@ const SettingsPage = () => {
         {activeTab === 'general' && (
           <div className="space-y-4">
             <SettingSelect
-              label="Theme"
-              description="Choose your preferred color scheme"
-              value={localSettings.theme}
-              onChange={(value) => setLocalSettings(prev => ({ ...prev, theme: value }))}
-              options={[
-                { value: 'dark', label: 'Dark Theme' },
-                { value: 'light', label: 'Light Theme' },
-                { value: 'auto', label: 'Auto (System)' }
-              ]}
-              icon={localSettings.theme === 'dark' ? MoonIcon : SunIcon}
-            />
-
-            <SettingSelect
-              label="Language"
-              description="Select your preferred language"
-              value={localSettings.language}
-              onChange={(value) => setLocalSettings(prev => ({ ...prev, language: value }))}
-              options={[
-                { value: 'en', label: 'English' },
-                { value: 'es', label: 'Español' },
-                { value: 'fr', label: 'Français' },
-                { value: 'de', label: 'Deutsch' },
-                { value: 'ru', label: 'Русский' },
-                { value: 'zh', label: '中文' }
-              ]}
-              icon={LanguageIcon}
-            />
-
-            <SettingSelect
               label="Currency Display"
               description="Choose how currency is displayed"
               value={localSettings.currency}
@@ -227,22 +199,20 @@ const SettingsPage = () => {
                 { value: 'USD', label: 'US Dollar ($)' },
                 { value: 'EUR', label: 'Euro (€)' },
                 { value: 'GBP', label: 'British Pound (£)' },
+                { value: 'JPY', label: 'Japanese Yen (¥)' },
+                { value: 'CNY', label: 'Chinese Yuan (¥)' },
+                { value: 'KRW', label: 'South Korean Won (₩)' },
+                { value: 'INR', label: 'Indian Rupee (₹)' },
+                { value: 'BRL', label: 'Brazilian Real (R$)' },
+                { value: 'CAD', label: 'Canadian Dollar (C$)' },
+                { value: 'AUD', label: 'Australian Dollar (A$)' },
+                { value: 'CHF', label: 'Swiss Franc (CHF)' },
+                { value: 'SEK', label: 'Swedish Krona (kr)' },
+                { value: 'NOK', label: 'Norwegian Krone (kr)' },
+                { value: 'RUB', label: 'Russian Ruble (₽)' },
                 { value: 'TON', label: 'TON Cryptocurrency' }
               ]}
               icon={CurrencyDollarIcon}
-            />
-
-            <SettingSelect
-              label="Difficulty"
-              description="Adjust game difficulty and progression speed"
-              value={localSettings.difficulty}
-              onChange={(value) => setLocalSettings(prev => ({ ...prev, difficulty: value }))}
-              options={[
-                { value: 'easy', label: 'Easy - Faster progression' },
-                { value: 'normal', label: 'Normal - Balanced experience' },
-                { value: 'hard', label: 'Hard - Realistic challenge' },
-                { value: 'expert', label: 'Expert - Maximum challenge' }
-              ]}
             />
 
             <SettingToggle
@@ -362,12 +332,79 @@ const SettingsPage = () => {
               onChange={(value) => setLocalSettings(prev => ({ ...prev, vibration: value }))}
             />
 
-            <SettingToggle
-              label="Auto-Collect Earnings"
-              description="Automatically collect business earnings when available"
-              value={localSettings.autoCollect}
-              onChange={(value) => setLocalSettings(prev => ({ ...prev, autoCollect: value }))}
-            />
+            {/* Auto-Collect Premium Feature */}
+            <div className="bg-gradient-to-r from-purple-900 to-blue-900 rounded-lg p-4 border border-purple-500">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-600 rounded-lg">
+                    <BanknotesIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white">Auto-Collect Earnings</h4>
+                    <p className="text-sm text-purple-200">Automatically collect business earnings when available</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">PREMIUM</span>
+                  <button
+                    onClick={() => {
+                      if (localSettings.autoCollect) {
+                        setLocalSettings(prev => ({ ...prev, autoCollect: false }));
+                      } else {
+                        // Show purchase modal for auto-collect feature
+                        alert('Purchase Auto-Collect for 5 TON to automatically collect your business earnings!');
+                      }
+                    }}
+                    className={`w-12 h-6 rounded-full transition-colors ${localSettings.autoCollect ? 'bg-green-500' : 'bg-gray-600'
+                      }`}
+                  >
+                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${localSettings.autoCollect ? 'translate-x-6' : 'translate-x-0.5'
+                      }`} />
+                  </button>
+                </div>
+              </div>
+              <div className="text-xs text-purple-300">
+                💎 Cost: 5 TON • ⚡ Saves time • 📈 Never miss earnings
+              </div>
+            </div>
+
+            {/* Currency Display Settings */}
+            <div className="bg-gray-800 rounded-lg p-4">
+              <h4 className="font-semibold text-white mb-3">Currency Display</h4>
+              <p className="text-sm text-gray-400 mb-4">Choose how currency is displayed throughout the app</p>
+
+              <div className="space-y-2">
+                {[
+                  { value: 'USD', label: 'US Dollar ($)', symbol: '$' },
+                  { value: 'EUR', label: 'Euro (€)', symbol: '€' },
+                  { value: 'GBP', label: 'British Pound (£)', symbol: '£' },
+                  { value: 'JPY', label: 'Japanese Yen (¥)', symbol: '¥' },
+                  { value: 'CAD', label: 'Canadian Dollar (C$)', symbol: 'C$' },
+                  { value: 'AUD', label: 'Australian Dollar (A$)', symbol: 'A$' },
+                  { value: 'CHF', label: 'Swiss Franc (CHF)', symbol: 'CHF' },
+                  { value: 'CNY', label: 'Chinese Yuan (¥)', symbol: '¥' },
+                  { value: 'KRW', label: 'South Korean Won (₩)', symbol: '₩' },
+                  { value: 'INR', label: 'Indian Rupee (₹)', symbol: '₹' },
+                  { value: 'BRL', label: 'Brazilian Real (R$)', symbol: 'R$' },
+                  { value: 'RUB', label: 'Russian Ruble (₽)', symbol: '₽' },
+                  { value: 'TON', label: 'Toncoin (TON)', symbol: 'TON' }
+                ].map((currency) => (
+                  <button
+                    key={currency.value}
+                    onClick={() => setLocalSettings(prev => ({ ...prev, currency: currency.value }))}
+                    className={`w-full text-left p-3 rounded-lg transition-colors ${localSettings.currency === currency.value
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{currency.label}</span>
+                      <span className="text-sm opacity-75">{currency.symbol}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

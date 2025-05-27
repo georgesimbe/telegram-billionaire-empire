@@ -2,71 +2,85 @@ export const BUSINESS_CATEGORIES = {
   FOOD_SERVICE: {
     id: 'food_service',
     name: 'Food & Beverage',
-    icon: '🍕',
-    description: 'Restaurants, cafes, and food delivery services',
-    minCapital: 5000
-  },
-  RETAIL: {
-    id: 'retail',
-    name: 'Retail & Commerce',
-    icon: '🛍️',
-    description: 'Stores, shops, and e-commerce platforms',
-    minCapital: 10000
+    icon: '🍽️',
+    description: 'Food production, processing, and service businesses',
+    minCapital: 100
   },
   TECHNOLOGY: {
     id: 'technology',
     name: 'Technology',
     icon: '💻',
-    description: 'Software, apps, and tech services',
+    description: 'Software, hardware, and digital innovation businesses',
     minCapital: 25000
+  },
+  FINANCE: {
+    id: 'finance',
+    name: 'Finance',
+    icon: '💰',
+    description: 'Banking, investment, and financial service businesses',
+    minCapital: 500000
+  },
+  ENERGY: {
+    id: 'energy',
+    name: 'Energy',
+    icon: '⚡',
+    description: 'Power generation, utilities, and energy businesses',
+    minCapital: 1000000
+  },
+  HEALTHCARE: {
+    id: 'healthcare',
+    name: 'Healthcare',
+    icon: '🏥',
+    description: 'Medical services, pharmaceuticals, and health technology',
+    minCapital: 300000
+  },
+  AGRICULTURE: {
+    id: 'agriculture',
+    name: 'Agriculture',
+    icon: '🌾',
+    description: 'Farming, food production, and agricultural businesses',
+    minCapital: 50000
+  },
+  ENTERTAINMENT: {
+    id: 'entertainment',
+    name: 'Entertainment',
+    icon: '🎭',
+    description: 'Media, gaming, sports, and entertainment businesses',
+    minCapital: 150000
+  },
+  EDUCATION: {
+    id: 'education',
+    name: 'Education',
+    icon: '📚',
+    description: 'Schools, training, and educational service businesses',
+    minCapital: 75000
+  },
+  TRANSPORTATION: {
+    id: 'transportation',
+    name: 'Transportation',
+    icon: '🚛',
+    description: 'Logistics, shipping, and transportation businesses',
+    minCapital: 200000
   },
   REAL_ESTATE: {
     id: 'real_estate',
     name: 'Real Estate',
     icon: '🏢',
-    description: 'Property development and management',
+    description: 'Property development, management, and real estate businesses',
     minCapital: 100000
   },
   MANUFACTURING: {
     id: 'manufacturing',
     name: 'Manufacturing',
     icon: '🏭',
-    description: 'Production and industrial businesses',
-    minCapital: 200000
-  },
-  FINANCE: {
-    id: 'finance',
-    name: 'Financial Services',
-    icon: '💰',
-    description: 'Banks, investment firms, and fintech',
+    description: 'Production, assembly, and industrial manufacturing',
     minCapital: 500000
-  },
-  ENTERTAINMENT: {
-    id: 'entertainment',
-    name: 'Entertainment',
-    icon: '🎬',
-    description: 'Media, gaming, and entertainment venues',
-    minCapital: 150000
-  },
-  HEALTHCARE: {
-    id: 'healthcare',
-    name: 'Healthcare',
-    icon: '🏥',
-    description: 'Medical services and health tech',
-    minCapital: 300000
-  },
-  ENERGY: {
-    id: 'energy',
-    name: 'Energy & Utilities',
-    icon: '⚡',
-    description: 'Power generation and utility services',
-    minCapital: 1000000
   },
   AEROSPACE: {
     id: 'aerospace',
     name: 'Aerospace',
     icon: '🚀',
-    description: 'Space exploration and aviation',
+    description: 'Space exploration, aviation, and aerospace technology',
     minCapital: 10000000
   }
 };
@@ -346,7 +360,143 @@ export const BUSINESSES_CONFIG = {
     upgrades: ['battery_storage', 'smart_grid', 'efficiency_improvements']
   },
 
+  // Agriculture
+  ORGANIC_FARM: {
+    id: 'ORGANIC_FARM',
+    name: 'Organic Farm',
+    description: 'A sustainable organic farm producing fresh, healthy crops.',
+    icon: '🚜',
+    category: 'agriculture',
+    baseCost: 25000,
+    baseIncome: 500,
+    costMultiplier: 1.6,
+    incomeMultiplier: 1.4,
+    unlockLevel: 6,
+    maxLevel: 35,
+    franchiseLevel: 15,
+    staffRequired: 12,
+    managerLevel: 25,
+    newsEvents: ['weather', 'crop_prices', 'organic_demand'],
+    upgrades: ['irrigation_system', 'greenhouse_tech', 'organic_certification']
+  },
+
+  LIVESTOCK_RANCH: {
+    id: 'LIVESTOCK_RANCH',
+    name: 'Livestock Ranch',
+    description: 'A large-scale ranch raising cattle and other livestock.',
+    icon: '🐄',
+    category: 'agriculture',
+    baseCost: 75000,
+    baseIncome: 1200,
+    costMultiplier: 1.8,
+    incomeMultiplier: 1.5,
+    unlockLevel: 12,
+    maxLevel: 25,
+    franchiseLevel: 18,
+    staffRequired: 25,
+    managerLevel: 30,
+    newsEvents: ['feed_prices', 'meat_demand', 'regulations'],
+    upgrades: ['automated_feeding', 'veterinary_care', 'processing_facility']
+  },
+
+  // Education
+  ONLINE_ACADEMY: {
+    id: 'ONLINE_ACADEMY',
+    name: 'Online Academy',
+    description: 'A digital education platform offering online courses.',
+    icon: '💻',
+    category: 'education',
+    baseCost: 15000,
+    baseIncome: 350,
+    costMultiplier: 1.7,
+    incomeMultiplier: 1.6,
+    unlockLevel: 7,
+    maxLevel: 40,
+    franchiseLevel: 20,
+    staffRequired: 15,
+    managerLevel: 28,
+    newsEvents: ['online_learning_trends', 'technology_advances', 'education_policy'],
+    upgrades: ['ai_tutoring', 'vr_classrooms', 'certification_programs']
+  },
+
+  PRIVATE_SCHOOL: {
+    id: 'PRIVATE_SCHOOL',
+    name: 'Private School',
+    description: 'An elite private school providing premium education.',
+    icon: '🏫',
+    category: 'education',
+    baseCost: 500000,
+    baseIncome: 8000,
+    costMultiplier: 2.2,
+    incomeMultiplier: 1.8,
+    unlockLevel: 18,
+    maxLevel: 15,
+    franchiseLevel: 10,
+    staffRequired: 50,
+    managerLevel: 40,
+    newsEvents: ['education_standards', 'tuition_trends', 'teacher_shortage'],
+    upgrades: ['smart_classrooms', 'sports_facilities', 'scholarship_program']
+  },
+
+  // Transportation
+  DELIVERY_SERVICE: {
+    id: 'DELIVERY_SERVICE',
+    name: 'Delivery Service',
+    description: 'A logistics company providing fast delivery services.',
+    icon: '📦',
+    category: 'transportation',
+    baseCost: 40000,
+    baseIncome: 800,
+    costMultiplier: 1.6,
+    incomeMultiplier: 1.4,
+    unlockLevel: 9,
+    maxLevel: 30,
+    franchiseLevel: 15,
+    staffRequired: 20,
+    managerLevel: 25,
+    newsEvents: ['fuel_prices', 'e_commerce_growth', 'labor_costs'],
+    upgrades: ['drone_delivery', 'tracking_system', 'electric_vehicles']
+  },
+
+  AIRLINE: {
+    id: 'AIRLINE',
+    name: 'Regional Airline',
+    description: 'A regional airline connecting cities with passenger flights.',
+    icon: '✈️',
+    category: 'transportation',
+    baseCost: 2000000,
+    baseIncome: 25000,
+    costMultiplier: 2.5,
+    incomeMultiplier: 2.0,
+    unlockLevel: 30,
+    maxLevel: 10,
+    franchiseLevel: 6,
+    staffRequired: 100,
+    managerLevel: 50,
+    newsEvents: ['fuel_costs', 'travel_demand', 'safety_regulations'],
+    upgrades: ['fuel_efficient_planes', 'premium_service', 'route_expansion']
+  },
+
   // Aerospace
+  SATELLITE_COMPANY: {
+    id: 'SATELLITE_COMPANY',
+    name: 'Satellite Company',
+    description: 'A company deploying and operating communication satellites.',
+    icon: '🛰️',
+    category: 'aerospace',
+    baseCost: 5000000,
+    baseIncome: 60000,
+    costMultiplier: 2.8,
+    incomeMultiplier: 2.2,
+    unlockLevel: 40,
+    maxLevel: 8,
+    franchiseLevel: 5,
+    staffRequired: 75,
+    managerLevel: 55,
+    newsEvents: ['space_policy', 'launch_costs', 'communication_demand'],
+    upgrades: ['miniaturization', 'constellation_network', 'ground_stations']
+  },
+
   SPACE_TOURISM: {
     id: 'SPACE_TOURISM',
     name: 'Space Tourism Company',

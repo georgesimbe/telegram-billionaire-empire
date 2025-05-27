@@ -19,7 +19,12 @@ import {
   BanknotesIcon,
   BuildingOfficeIcon,
   UsersIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  PencilIcon,
+  PhotoIcon,
+  ChatBubbleLeftIcon,
+  EyeIcon,
+  EyeSlashIcon
 } from '@heroicons/react/24/outline';
 import useIntegratedGameStore from '../store/integratedGameStore';
 import { formatNumber } from '../utils/formatters';
@@ -41,14 +46,26 @@ const ProfilePage = () => {
     governance,
     economics,
     achievements,
-    calculateEconomicStatus,
-    updateMarketInfluence
+    calculateEconomicStatus
+    // updateMarketInfluence // Function doesn't exist
   } = useIntegratedGameStore();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
+  const [profileCustomization, setProfileCustomization] = useState({
+    profilePicture: '',
+    bannerImage: '',
+    backgroundImage: '',
+    displayName: player.username || 'Anonymous',
+    bio: '',
+    showLevel: true,
+    showWealth: false,
+    showAchievements: true,
+    showBusinesses: true
+  });
 
   const [tonConnectUI] = useTonConnectUI();
   const connected = tonConnectUI.connected;
@@ -59,8 +76,21 @@ const ProfilePage = () => {
   // Calculate comprehensive stats
   useEffect(() => {
     calculateEconomicStatus();
-    updateMarketInfluence();
-  }, [calculateEconomicStatus, updateMarketInfluence]);
+    // updateMarketInfluence(); // Function doesn't exist
+  }, [calculateEconomicStatus]);
+
+  // Load saved profile customization
+  useEffect(() => {
+    const saved = localStorage.getItem('profileCustomization');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setProfileCustomization(prev => ({ ...prev, ...parsed }));
+      } catch (error) {
+        console.error('Failed to load profile customization:', error);
+      }
+    }
+  }, []);
 
   const totalBusinessValue = businesses.reduce((sum, b) => sum + (b.cost || 0) * (b.level || 1), 0);
   const totalWealth = player.cash + totalBusinessValue + staking.tonBalance * 100; // Rough TON to USD conversion
@@ -215,27 +245,38 @@ const ProfilePage = () => {
       </div>
 
       {/* Wealth & Assets */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Wealth & Assets</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-sm text-gray-400">Cash Balance</p>
-            <p className="text-2xl font-bold text-green-400">${formatNumber(player.cash)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-400">Business Value</p>
-            <p className="text-2xl font-bold text-blue-400">${formatNumber(totalBusinessValue)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-400">TON Balance</p>
-            <p className="text-2xl font-bold text-purple-400">{formatNumber(staking.tonBalance)} TON</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-400">Total Wealth</p>
-            <p className="text-2xl font-bold text-yellow-400">${formatNumber(totalWealth)}</p>
+      {profileCustomization.showWealth ? (
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-xl font-bold text-white mb-4">Wealth & Assets</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-400">Cash Balance</p>
+              <p className="text-2xl font-bold text-green-400">${formatNumber(player.cash)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Business Value</p>
+              <p className="text-2xl font-bold text-blue-400">${formatNumber(totalBusinessValue)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">TON Balance</p>
+              <p className="text-2xl font-bold text-purple-400">{formatNumber(staking.tonBalance)} TON</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Total Wealth</p>
+              <p className="text-2xl font-bold text-yellow-400">${formatNumber(totalWealth)}</p>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-gray-800 rounded-lg p-6">
+          <h3 className="text-xl font-bold text-white mb-4">Wealth & Assets</h3>
+          <div className="text-center py-8">
+            <EyeSlashIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 mb-2">Wealth information is private</p>
+            <p className="text-sm text-gray-500">This user has chosen to keep their financial information private.</p>
+          </div>
+        </div>
+      )}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4">
@@ -345,7 +386,13 @@ const ProfilePage = () => {
           <QuickHint hintKey="BUSINESS_ROI" />
         </div>
 
-        {businesses.length > 0 ? (
+        {!profileCustomization.showBusinesses ? (
+          <div className="text-center py-8">
+            <EyeSlashIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 mb-2">Business portfolio is private</p>
+            <p className="text-sm text-gray-500">This user has chosen to keep their business information private.</p>
+          </div>
+        ) : businesses.length > 0 ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -409,9 +456,9 @@ const ProfilePage = () => {
           <QuickHint hintKey="RELATIONSHIPS" />
         </div>
 
-        {relationships.length > 0 ? (
+        {(relationships?.connections || []).length > 0 ? (
           <div className="space-y-3">
-            {relationships.map(rel => (
+            {(relationships?.connections || []).map(rel => (
               <div key={rel.id} className="bg-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-semibold">{rel.name}</span>
@@ -472,7 +519,13 @@ const ProfilePage = () => {
       <div className="bg-gray-800 rounded-lg p-6">
         <h3 className="text-xl font-bold text-white mb-4">Achievements</h3>
 
-        {achievements.length > 0 ? (
+        {!profileCustomization.showAchievements ? (
+          <div className="text-center py-8">
+            <EyeSlashIcon className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 mb-2">Achievements are private</p>
+            <p className="text-sm text-gray-500">This user has chosen to keep their achievements private.</p>
+          </div>
+        ) : achievements.length > 0 ? (
           <div className="grid grid-cols-2 gap-4">
             {achievements.map((achievement, index) => (
               <motion.div
@@ -508,24 +561,84 @@ const ProfilePage = () => {
 
   return (
     <div className="p-4 max-w-4xl mx-auto pb-20">
-      {/* Header with 3D Avatar */}
+      {/* Header with 3D Avatar and Customization */}
       <div className="relative h-64 bg-gray-800 rounded-lg overflow-hidden mb-6">
+        {/* Background Image */}
+        {profileCustomization.backgroundImage && (
+          <div
+            className="absolute inset-0 bg-cover bg-center opacity-30"
+            style={{ backgroundImage: `url(${profileCustomization.backgroundImage})` }}
+          />
+        )}
+
+        {/* Banner Image */}
+        {profileCustomization.bannerImage && (
+          <div
+            className="absolute top-0 left-0 right-0 h-20 bg-cover bg-center"
+            style={{ backgroundImage: `url(${profileCustomization.bannerImage})` }}
+          />
+        )}
+
         <Spline
           scene="https://prod.spline.design/6Wq1Q7YGyM-iab9U/scene.splinecode"
           className="w-full h-full"
         />
+
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 to-transparent p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">{player.username || 'Anonymous'}</h1>
-              <p className="text-gray-400">Level {player.level} • {economicClass.name}</p>
+            <div className="flex items-center space-x-4">
+              {/* Profile Picture */}
+              <div className="relative">
+                {profileCustomization.profilePicture ? (
+                  <img
+                    src={profileCustomization.profilePicture}
+                    alt="Profile"
+                    className="w-16 h-16 rounded-full border-2 border-white object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center border-2 border-white">
+                    <UserIcon className="h-8 w-8 text-gray-300" />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  {profileCustomization.displayName || player.username || 'Anonymous'}
+                </h1>
+                <p className="text-gray-400">
+                  {profileCustomization.showLevel && `Level ${player.level} • `}
+                  {economicClass.name}
+                </p>
+                {profileCustomization.bio && (
+                  <p className="text-gray-300 text-sm mt-1">{profileCustomization.bio}</p>
+                )}
+              </div>
             </div>
-            <button
-              onClick={() => navigate('/settings')}
-              className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-            >
-              <CogIcon className="h-5 w-5 text-gray-300" />
-            </button>
+
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setShowCustomizeModal(true)}
+                className="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+              >
+                <PencilIcon className="h-5 w-5 text-white" />
+              </button>
+              <button
+                onClick={() => {
+                  // Open Telegram DM
+                  window.open(`https://t.me/${player.username || 'telegram'}`, '_blank');
+                }}
+                className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              >
+                <ChatBubbleLeftIcon className="h-5 w-5 text-white" />
+              </button>
+              <button
+                onClick={() => navigate('/settings')}
+                className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                <CogIcon className="h-5 w-5 text-gray-300" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -639,6 +752,159 @@ const ProfilePage = () => {
                 disabled={isWithdrawing}
               >
                 {isWithdrawing ? 'Processing...' : 'Withdraw'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Profile Customization Modal */}
+      {showCustomizeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <h3 className="text-xl font-bold mb-6 text-white">Customize Profile</h3>
+
+            <div className="space-y-6">
+              {/* Display Name */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Display Name</label>
+                <input
+                  type="text"
+                  value={profileCustomization.displayName}
+                  onChange={(e) => setProfileCustomization(prev => ({ ...prev, displayName: e.target.value }))}
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white"
+                  placeholder="Enter display name"
+                />
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Bio</label>
+                <textarea
+                  value={profileCustomization.bio}
+                  onChange={(e) => setProfileCustomization(prev => ({ ...prev, bio: e.target.value }))}
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white h-20 resize-none"
+                  placeholder="Tell others about yourself..."
+                  maxLength={150}
+                />
+                <p className="text-xs text-gray-500 mt-1">{profileCustomization.bio.length}/150</p>
+              </div>
+
+              {/* Profile Picture */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Profile Picture URL</label>
+                <div className="flex space-x-3">
+                  <input
+                    type="url"
+                    value={profileCustomization.profilePicture}
+                    onChange={(e) => setProfileCustomization(prev => ({ ...prev, profilePicture: e.target.value }))}
+                    className="flex-1 bg-gray-700 rounded-lg px-4 py-2 text-white"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  <button className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
+                    <PhotoIcon className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Banner Image */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Banner Image URL</label>
+                <div className="flex space-x-3">
+                  <input
+                    type="url"
+                    value={profileCustomization.bannerImage}
+                    onChange={(e) => setProfileCustomization(prev => ({ ...prev, bannerImage: e.target.value }))}
+                    className="flex-1 bg-gray-700 rounded-lg px-4 py-2 text-white"
+                    placeholder="https://example.com/banner.jpg"
+                  />
+                  <button className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
+                    <PhotoIcon className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Background Image */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Background Image URL</label>
+                <div className="flex space-x-3">
+                  <input
+                    type="url"
+                    value={profileCustomization.backgroundImage}
+                    onChange={(e) => setProfileCustomization(prev => ({ ...prev, backgroundImage: e.target.value }))}
+                    className="flex-1 bg-gray-700 rounded-lg px-4 py-2 text-white"
+                    placeholder="https://example.com/background.jpg"
+                  />
+                  <button className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg">
+                    <PhotoIcon className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Privacy Settings */}
+              <div>
+                <h4 className="text-lg font-semibold text-white mb-3">Privacy Settings</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Show Level</span>
+                    <button
+                      onClick={() => setProfileCustomization(prev => ({ ...prev, showLevel: !prev.showLevel }))}
+                      className={`p-2 rounded-lg ${profileCustomization.showLevel ? 'bg-green-600' : 'bg-gray-600'}`}
+                    >
+                      {profileCustomization.showLevel ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Show Wealth Status</span>
+                    <button
+                      onClick={() => setProfileCustomization(prev => ({ ...prev, showWealth: !prev.showWealth }))}
+                      className={`p-2 rounded-lg ${profileCustomization.showWealth ? 'bg-green-600' : 'bg-gray-600'}`}
+                    >
+                      {profileCustomization.showWealth ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Show Achievements</span>
+                    <button
+                      onClick={() => setProfileCustomization(prev => ({ ...prev, showAchievements: !prev.showAchievements }))}
+                      className={`p-2 rounded-lg ${profileCustomization.showAchievements ? 'bg-green-600' : 'bg-gray-600'}`}
+                    >
+                      {profileCustomization.showAchievements ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300">Show Businesses</span>
+                    <button
+                      onClick={() => setProfileCustomization(prev => ({ ...prev, showBusinesses: !prev.showBusinesses }))}
+                      className={`p-2 rounded-lg ${profileCustomization.showBusinesses ? 'bg-green-600' : 'bg-gray-600'}`}
+                    >
+                      {profileCustomization.showBusinesses ? <EyeIcon className="h-4 w-4" /> : <EyeSlashIcon className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowCustomizeModal(false)}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg font-semibold text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Save customization settings
+                  localStorage.setItem('profileCustomization', JSON.stringify(profileCustomization));
+                  setShowCustomizeModal(false);
+                }}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 py-2 rounded-lg font-semibold text-white"
+              >
+                Save Changes
               </button>
             </div>
           </motion.div>

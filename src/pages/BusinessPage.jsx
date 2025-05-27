@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import useIntegratedGameStore from '../store/integratedGameStore';
+import PageHeader from '../components/ui/PageHeader';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
+import TabNavigation from '../components/ui/TabNavigation';
 import { EXPANDED_INDUSTRIES_CONFIG, INDUSTRY_SECTORS, calculateBusinessCost, calculateBusinessIncome, getUnlockedBusinesses, getBusinessesBySector, calculateSupplyChainBonus } from '../config/expandedIndustriesConfig';
 import HintIcon, { QuickHint, GAME_HINTS } from '../components/HintIcon';
 import { formatNumber } from '../utils/formatters';
@@ -462,36 +466,27 @@ const BusinessPage = () => {
     </div>
   );
 
+  const tabs = [
+    { id: 'marketplace', name: 'Marketplace', icon: '🏪' },
+    { id: 'portfolio', name: 'Portfolio', icon: '📊' },
+    { id: 'supply-chain', name: 'Supply Chain', icon: '🔗' }
+  ];
+
   return (
     <div className="p-4 max-w-7xl mx-auto pb-20">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-white">Business Empire</h1>
-        <div className="flex items-center space-x-2">
-          <span className="text-gray-400">Cash:</span>
-          <span className="text-green-400 font-bold">${formatNumber(player.cash)}</span>
-        </div>
-      </div>
+      <PageHeader
+        title="Business Empire"
+        subtitle="Build and manage your business portfolio"
+        showCash={true}
+        cash={player.cash}
+      />
 
-      {/* Tab Navigation */}
-      <div className="flex space-x-1 mb-6 bg-gray-800 p-1 rounded-lg">
-        {[
-          { id: 'marketplace', name: 'Marketplace', icon: '🏪' },
-          { id: 'portfolio', name: 'Portfolio', icon: '📊' },
-          { id: 'supply-chain', name: 'Supply Chain', icon: '🔗' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${activeTab === tab.id
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
-          >
-            <span>{tab.icon}</span>
-            <span>{tab.name}</span>
-          </button>
-        ))}
-      </div>
+      <TabNavigation
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        className="mb-6"
+      />
 
       {/* Tab Content */}
       <motion.div

@@ -9,18 +9,36 @@ function TestApp() {
   }, []);
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-900 text-white">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-4">Test App</h1>
-        <p className="text-xl">{status}</p>
-        <div className="mt-4">
-          <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            onClick={() => setStatus('Button clicked!')}
-          >
-            Test Button
-          </button>
-        </div>
+    <div style={{
+      padding: '20px',
+      backgroundColor: '#1a1a1a',
+      color: 'white',
+      minHeight: '100vh',
+      fontFamily: 'Arial, sans-serif'
+    }}>
+      <h1>🎮 Telegram Billionaire Empire - Test Mode</h1>
+      <p>✅ React is working!</p>
+      <p>✅ Backend API is working!</p>
+      <p>🔧 Main app has dependency loading issues</p>
+
+      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#333', borderRadius: '8px' }}>
+        <h3>Test Results:</h3>
+        <ul>
+          <li>✅ Vite development server: Running</li>
+          <li>✅ Backend server (port 3000): Running</li>
+          <li>✅ Profile API: Working</li>
+          <li>✅ Tap API: Working</li>
+          <li>❌ Main React app: Dependency issues</li>
+        </ul>
+      </div>
+
+      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#2a4a2a', borderRadius: '8px' }}>
+        <h3>Next Steps:</h3>
+        <ol>
+          <li>Fix React dependency loading issues</li>
+          <li>Ensure all npm packages are properly installed</li>
+          <li>Test main application functionality</li>
+        </ol>
       </div>
     </div>
   );

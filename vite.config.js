@@ -29,7 +29,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'zustand', 'framer-motion', 'buffer']
+    include: ['react', 'react-dom', 'zustand', 'framer-motion', 'buffer', 'animejs']
   },
   resolve: {
     alias: {
