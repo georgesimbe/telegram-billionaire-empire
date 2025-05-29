@@ -4,132 +4,207 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Telegram Billionaire Empire** is a Telegram Mini App that gamifies business empire building with real TON cryptocurrency rewards. Players tap to earn points, build businesses, invest in assets, and convert virtual earnings into actual TON tokens.
+**Telegram Billionaire Simulation** is a sophisticated economic simulation game built as a Telegram Mini App. Players build business empires while managing careers, housing, banking, and relationships - progressing from working class to ultra-rich status with complex economic mechanics.
 
 ## Development Commands
 
-### Frontend Development
+### Setup and Installation
+
 ```bash
-npm install          # Install dependencies
-npm run dev         # Start development server (Vite)
-npm run build       # Build for production
-npm run preview     # Preview production build
+# Install all dependencies
+npm install && cd server && npm install && cd ..
+
+# Environment setup
+cp server/env.example server/.env
+# Configure Supabase, Redis, and Telegram Bot credentials
+
+# Start local development
+npm run dev:all  # Concurrent: services + backend + frontend
 ```
 
-### Backend Development
+### Individual Services
+
 ```bash
+# Frontend (React + Vite, port 5173)
+npm run dev
+npm run build
+npm run preview
+
+# Backend (Node.js + Express, port 3000)
 cd server
-npm install         # Install server dependencies
-npm run dev         # Start development server with nodemon
-npm start          # Start production server
+npm run dev      # Development with nodemon
+npm start        # Production server
+
+# Database
+supabase start   # Local Supabase instance
+supabase db reset --db-url postgresql://... # Reset with migrations
 ```
 
-### Smart Contract Deployment
+### Testing
+
 ```bash
-func -o contracts/GameWallet.boc contracts/GameWallet.fc
-node scripts/deploy-contracts.js
+# Frontend testing
+npm run test           # Vitest unit tests
+npm run test:watch     # Watch mode
+npm run test:e2e       # Playwright E2E tests
+
+# Backend testing
+cd server
+npm test              # Jest unit tests
+npm run test:watch    # Watch mode
+
+# Full test suite
+npm run test:all      # Runs all tests across frontend/backend
+```
+
+### Code Quality
+
+```bash
+# Linting and formatting
+npm run lint          # ESLint check
+npm run lint:fix      # Auto-fix linting issues
+
+# Type checking (if applicable)
+npm run type-check    # Check TypeScript types
 ```
 
 ## Architecture Overview
 
-### Tech Stack
-- **Frontend**: React 18 + Vite + Tailwind CSS + Framer Motion
-- **State**: Zustand with persistence
-- **Backend**: Node.js + Express + MongoDB + Redis
-- **Blockchain**: TON Network with FunC smart contracts
-- **Telegram**: Mini Apps SDK + Bot API integration
+### Technology Stack
 
-### Key Architectural Patterns
+- **Frontend**: React 18 + Vite + Tailwind CSS + Zustand + Framer Motion
+- **Backend**: Node.js + Express + Supabase (PostgreSQL) + Redis + Winston
+- **Integration**: Telegram Web App SDK + TON Connect for crypto wallet
+- **Testing**: Vitest (frontend) + Jest (backend) + Playwright (E2E)
 
-#### State Management (Zustand)
-- `gameStore.js`: Core game state, points, businesses, levels
-- `societyStore.js`: Guild/clan mechanics, governance, warfare
-- All state changes go through anti-cheat validation
+### Core Application Structure
 
-#### Anti-Cheat System (Multi-Layer)
-- **Client**: `AntiCheatWrapper.jsx` monitors user behavior, click rates, DevTools
-- **Server**: `antiCheat.js` middleware validates all actions with Redis tracking
-- **Patterns**: Rate limiting, temporal analysis, game state validation
+```text
+src/
+├── components/          # Domain-organized React components
+│   ├── ui/             # Reusable UI primitives (Button, Card, etc.)
+│   ├── business/       # Business management components
+│   ├── career/         # Career/education components
+│   ├── economy/        # Economic dashboard components
+│   └── layout/         # Navigation and layout components
+├── pages/              # Main application pages
+├── config/             # Game configuration by domain
+│   ├── core/           # Core game mechanics and constants
+│   ├── business/       # Business types, operations, supply chains
+│   ├── career/         # Jobs, education, skill progression
+│   └── economy/        # Economic simulation parameters
+├── store/              # Zustand state management
+│   ├── integratedGameStore.js  # Main store (use this, not gameStore.js)
+│   └── modules/        # 13 specialized store modules
+└── services/           # API integration and external services
 
-#### Economic Model
-- 10,000 points = 1 TON with 5% withdrawal fee
-- Daily limits: ads (20), trades (100), upgrades (50)
-- Minimum withdrawal: 50,000 points
+server/
+├── routes/             # Express route handlers
+├── services/           # Business logic services
+├── middleware/         # Auth, anti-cheat, rate limiting
+└── config/             # Server configuration files
+```
 
-### Core Game Mechanics
+## Key Development Patterns
 
-#### Business Empire System
-- 8-tier progression from lemonade stands to space stations
-- Each tier unlocked by level requirements
-- Exponential cost scaling with idle income generation
+### State Management with Zustand
 
-#### Society System (Advanced Social Features)
-- Telegram group integration with bot validation
-- Proposal-based governance and voting
-- Tax collection and treasury management
-- Inter-society warfare and trade agreements
+- **Primary Store**: Use `integratedGameStore.js` (NOT `gameStore.js`)
+- **Modular Architecture**: 13 specialized modules (player, business, banking, career, housing, relationships, staking, governance, economics, achievements, gameTime, security, settings)
+- **Selective Subscriptions**: Use specific selectors for performance
 
-#### Investment System
-- Real estate: `realEstateService.js` handles property trading
-- Stocks and crypto with market simulation
-- Portfolio management with risk/reward mechanics
+```javascript
+// ✅ Good - selective subscription
+const cash = useIntegratedGameStore(state => state.player.cash);
 
-## Security Considerations
+// ❌ Avoid - subscribes to entire store
+const state = useIntegratedGameStore();
+```
 
-### Environment Requirements
-- MongoDB connection string
-- Redis for rate limiting and session management
-- Telegram Bot Token from @BotFather
-- TON wallet mnemonic for contract deployment
-- HTTPS domain for production (required by Telegram)
+### Configuration System
 
-### Anti-Cheat Implementation
-Every user action flows through:
-1. Client-side behavior monitoring
-2. Server-side rate limiting and pattern analysis  
-3. Redis-based action tracking
-4. Automatic banning for detected cheating
+- **Domain-based**: Import configs from appropriate domain folders
+- **Centralized Constants**: Use `GAME_CONSTANTS` from core config
 
-### Production Security
-- JWT authentication for API endpoints
-- Telegram WebApp data validation
-- CORS, Helmet, and rate limiting middleware
-- Smart contract validation for all TON withdrawals
+```javascript
+import { BUSINESSES_CONFIG } from '../config/business/unifiedBusinessConfig';
+import { GAME_CONSTANTS } from '../config/core/gameConfig';
+```
 
-## Data Flow
+### Component Architecture
 
-1. User action in React component
-2. Zustand state update with client-side validation
-3. API call with Telegram authentication
-4. Anti-cheat middleware validation
-5. Business logic execution
-6. Database persistence
-7. State synchronization
+- **Domain Organization**: Group components by business domain, not technical type
+- **Reusable UI**: Use components from `components/ui/` for consistency
+- **Page Composition**: Main pages combine domain-specific components
 
-## Configuration Files
+### API Integration
 
-- `gameConfig.js`: Core game balance, costs, rewards
-- `businessMaterials.js`: Business tier definitions
-- `societyConfig.js`: Guild mechanics and governance rules
-- `gachaConfig.js`: Reward box probabilities
-- `lifestyleConfig.js`: Luxury purchases and VIP benefits
+- **Service Layer**: Use services in `src/services/` for API calls
+- **Error Handling**: Implement proper error boundaries and user feedback
+- **Authentication**: All API calls use Telegram Web App authentication
 
-## Development Notes
+## Game Systems Architecture
 
-### Local Development Setup
-1. Install MongoDB and Redis locally
-2. Create `.env` files with Telegram Bot token and database URLs
-3. Deploy smart contracts to TON testnet for development
-4. Use ngrok or similar for HTTPS tunnel (Telegram requirement)
+### Business Empire System
 
-### Testing Considerations
-- Anti-cheat system requires careful testing of rate limits
-- Society features need multiple test accounts
-- TON integration requires testnet tokens for testing
-- Telegram Mini App testing requires real Telegram environment
+- **12 Industry Categories**: Each with unique mechanics and supply chains
+- **Tier Progression**: Micro → Small → Medium → Large businesses
+- **Staff Management**: 4 employee types with skill progression
+- **Complex Dependencies**: Businesses have supply chain relationships
 
-### Performance Considerations
-- Redis caching for frequently accessed game data
-- MongoDB indexing on user ID and action timestamps
-- Debounced state updates for rapid user actions
-- Lazy loading for business and investment components
+### Economic Simulation
+
+- **Economic Cycles**: Boom/Normal/Recession affecting all game systems
+- **Market Dynamics**: Real supply/demand with inflation modeling
+- **Cross-Player Effects**: Individual actions affect the broader economy
+
+### Anti-Cheat & Security
+
+- **Server-side Validation**: All calculations must be verified server-side
+- **Rate Limiting**: Implement rate limits for user actions
+- **Behavioral Analysis**: Monitor for suspicious patterns
+- **Data Integrity**: Use cryptographic validation for critical game state
+
+## Testing Guidelines
+
+### Frontend Testing
+
+- **Unit Tests**: Test component logic with Vitest
+- **Integration Tests**: Test store interactions and API integration
+- **E2E Tests**: Use Playwright for complete user workflows
+
+### Backend Testing
+
+- **Unit Tests**: Test individual service functions with Jest
+- **Integration Tests**: Test database interactions and API endpoints
+- **Performance Tests**: Test under load for scalability
+
+## Performance Considerations
+
+### Frontend
+
+- **Selective Subscriptions**: Only subscribe to needed store slices
+- **Component Memoization**: Use React.memo for expensive components
+- **Lazy Loading**: Implement code splitting for heavy components
+
+### Backend
+
+- **Database Optimization**: Use proper indexes and query optimization
+- **Redis Caching**: Cache frequently accessed data
+- **Rate Limiting**: Prevent abuse with Redis-backed rate limiting
+
+## Development Workflow
+
+1. **Feature Development**: Start with store module, then components, then pages
+2. **Configuration**: Add new game mechanics to appropriate config files
+3. **Testing**: Write tests alongside feature development
+4. **Anti-Cheat**: Ensure server-side validation for all game mechanics
+5. **Performance**: Test with realistic data loads and user behaviors
+
+## Common Gotchas
+
+- **Store Migration**: Always use `integratedGameStore.js`, not the legacy `gameStore.js`
+- **Config Imports**: Import from domain-specific config folders, not deprecated root configs
+- **Component Organization**: Follow domain-based structure, not technical grouping
+- **Authentication**: All API calls require Telegram Web App auth validation
+- **Rate Limiting**: Implement and test rate limits for all user actions
